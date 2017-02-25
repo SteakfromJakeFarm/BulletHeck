@@ -4,14 +4,18 @@ real_running = True
 i = 1
 win = False
 while real_running:
-    if not game.main_menu(win):
+    menu_quit, debug = game.main_menu(win, i)
+
+    if menu_quit:
         break
-    results = game.game(i)
-    if results == "win":
+
+    game_result = game.game(i, debug)
+
+    if game_result == "win":
         win = True
         i += 1
-    elif results == "loose":
+    elif game_result == "loose":
         win = False
         i = 1
-    elif results == False:
+    elif not game_result:
         break

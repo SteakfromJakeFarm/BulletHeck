@@ -10,15 +10,15 @@ class Laser:
 
         if self.side == 0:
             self.cord_x = random.randint(0, 600)
-            self.cord_y = 0
+            self.cord_y = -20
         elif self.side == 1:
             self.cord_x = random.randint(0, 600)
-            self.cord_y = 600
+            self.cord_y = 620
         elif self.side == 2:
-            self.cord_x = 0
+            self.cord_x = -20
             self.cord_y = random.randint(0, 600)
         else:
-            self.cord_x = 600
+            self.cord_x = 620
             self.cord_y = random.randint(0, 600)
 
         self.speed = random.random() * multiplier
@@ -92,14 +92,8 @@ class Shot:
         self.cord_y = player_y
         self.mouse_x = mouse_x
         self.mouse_y = mouse_y
-        try:
-            self.slope = mouse_y/mouse_x
-        except ZeroDivisionError:
-            self.slope = 0
         self.hurtbox = pygame.Rect(self.cord_x, self.cord_y, 5, 5)
         self.angle = 0
-        self.x_pos = abs(self.mouse_x - self.cord_x) == self.mouse_x - self.cord_x
-        self.y_pos = abs(self.mouse_y - self.cord_y) == self.mouse_y - self.cord_y
         self.calc_angle()
 
     def calc_angle(self):

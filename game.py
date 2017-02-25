@@ -4,12 +4,11 @@ import time
 import math
 
 VERSION = '0.2'
-DEBUG = False
 
 FRAMERATE = 60
 WINDOW_X = 600
 WINDOW_Y = 600
-LASER_THRESHOLD = 50
+LASER_THRESHOLD = 25
 TIME_LIMIT = 5
 PLAYER_COLLIDE = True
 PLAYER_SHOOT_COOLDOWN = 0.5
@@ -29,13 +28,14 @@ FONT_SIZE = 20
 LASER_MIN_SPEED = 1
 LASER_MULTIPLIER = 3
 LASER_RESPAWN = True
+TOGGLE_DEBUFFER = 0.2
 
-if DEBUG:
-    TIME_LIMIT = 99
-    PLAYER_COLLIDE = False
-    PLAYER_SHOOT_COOLDOWN = 0.0
-    PLAYER_SPEED = 3
-    COLOR_PLAYER = (100, 100, 100)
+DEBUG_TIME_LIMIT = 99
+DEBUG_PLAYER_COLLIDE = False
+DEBUG_PLAYER_SHOOT_COOLDOWN = 0.0
+DEBUG_PLAYER_SPEED = 3
+DEBUG_COLOR_PLAYER = (100, 100, 100)
+DEBUG_COLOR_SCREEN = (100, 100, 100)
 
 pygame.init()
 
@@ -43,15 +43,22 @@ SCREEN = pygame.display.set_mode((WINDOW_X, WINDOW_Y))
 CLOCK = pygame.time.Clock()
 
 
-def main_menu(win):
+def toggle(x):
+    return not x
+
+
+def main_menu(win,difficulty):
     menu_running = True
     menu_quit = False
     menu_spot = 0
+    debug_state = False
     if win:
         label_start = pygame.font.SysFont(FONT, 20).render("Continue", 1, COLOR_START)
     else:
         label_start = pygame.font.SysFont(FONT, 20).render("Start", 1, COLOR_START)
     label_quit = pygame.font.SysFont(FONT, 20).render("Quit", 1, COLOR_QUIT)
+    last_toggle = time.time()
+    pygame.event.clear()
     while menu_running:
         pygame.event.pump()
         CLOCK.tick(FRAMERATE)
@@ -60,6 +67,10 @@ def main_menu(win):
                 menu_quit = True
 
         pressed = pygame.key.get_pressed()
+        if pressed[pygame.K_c]:
+            if time.time() >= last_toggle + TOGGLE_DEBUFFER:
+                debug_state = toggle(debug_state)
+                last_toggle = time.time()
         if pressed[pygame.K_UP] and menu_spot > 0:
             menu_spot -= 1
         elif pressed[pygame.K_DOWN] and menu_spot < 1:
@@ -71,8 +82,10 @@ def main_menu(win):
         elif pressed[pygame.K_RETURN]:
             if menu_spot == 0:
                 menu_running = False
+                menu_quit = False
             elif menu_spot == 1:
-                return False
+                menu_running = False
+                menu_quit = True
 
         if menu_spot == 0:
             if win:
@@ -87,22 +100,30 @@ def main_menu(win):
                 label_start = pygame.font.SysFont(FONT, FONT_SIZE).render("New Game", 1, COLOR_START)
             label_quit = pygame.font.SysFont(FONT, FONT_SIZE).render("Quit  <--", 1, COLOR_QUIT)
 
-        SCREEN.fill(COLOR_SCREEN)
+        if debug_state:
+            SCREEN.fill(DEBUG_COLOR_SCREEN)
+        else:
+            SCREEN.fill(COLOR_SCREEN)
         SCREEN.blit(label_start, ((WINDOW_X / 2) - 50, (WINDOW_Y / 2 - 50)))
         SCREEN.blit(label_quit, ((WINDOW_X / 2) - 50, (WINDOW_Y / 2)))
 
+        level = pygame.font.SysFont(FONT, FONT_SIZE).render(str(difficulty), 1, COLOR_DIFFICULTY)
+        SCREEN.blit(level, (WINDOW_X - 50, 0))
+
         pygame.display.flip()
 
-        if menu_quit:
-            return False
-    return True
+    return menu_quit, debug_state
 
 
-def game(difficulty):
+def game(difficulty, debug_state=False):
     lasers = []
     game_quit = False
     game_running = True
-    player_obj = lib.Player(PLAYER_SHOOT_COOLDOWN, PLAYER_SPEED)
+
+    if debug_state:
+        player_obj = lib.Player(DEBUG_PLAYER_SHOOT_COOLDOWN, DEBUG_PLAYER_SPEED, DEBUG_PLAYER_SHOT_SPEED)
+    else:
+        player_obj = lib.Player(PLAYER_SHOOT_COOLDOWN, PLAYER_SPEED, PLAYER_SHOT_SPEED)
 
     def update_lasers(lasers_list):
         for laser in lasers_list:
@@ -120,14 +141,17 @@ def game(difficulty):
 
     def make_lasers(laser_list, x, frame):
         for i in range(0, x, 1):
-            if len(laser_list) < LASER_THRESHOLD * difficulty and (LASER_RESPAWN or frame):
-                laser_shot = lib.Laser(LASER_MIN_SPEED, LASER_MULTIPLIER + difficulty)
+            if len(laser_list) < LASER_THRESHOLD * (difficulty/2.0) and (LASER_RESPAWN or frame):
+                laser_shot = lib.Laser(LASER_MIN_SPEED, LASER_MULTIPLIER + (difficulty/5.0))
                 laser_list.append(laser_shot)
 
-    def update_player(player, key):
+    def update_player(player, key=''):
         player.movement(key)
         player.update()
-        pygame.draw.rect(SCREEN, COLOR_PLAYER, player.hitbox, 0)
+        if debug_state:
+            pygame.draw.rect(SCREEN, DEBUG_COLOR_PLAYER, player.hitbox, 0)
+        else:
+            pygame.draw.rect(SCREEN, COLOR_PLAYER, player.hitbox, 0)
 
     def update_shots(shots_list):
         for shot in shots_list:
@@ -147,12 +171,20 @@ def game(difficulty):
     time_start = time.time()
     first_frame = True
     frame_count = 0
+
+    pygame.event.clear()
+
     while game_running:
         frame_count += 1
         pygame.event.pump()
 
-        if time.time() >= time_start + TIME_LIMIT:
-            pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"event": "win"}))
+        if debug_state:
+            time_reached = time.time() >= time_start + DEBUG_TIME_LIMIT
+        else:
+            time_reached = time.time() >= time_start + TIME_LIMIT
+
+        if time_reached:
+                pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"event": "win"}))
 
         make_lasers(lasers, 1, first_frame)
 
@@ -218,7 +250,7 @@ def game(difficulty):
 
         # check for collisions with player or player's lasers
         for laser in lasers:
-            if player_obj.hitbox.colliderect(laser.hitbox) and PLAYER_COLLIDE:  # If player has hit a laser, post a 'hit' event
+            if player_obj.hitbox.colliderect(laser.hitbox) and not debug_state:  # If player has hit a laser, post a 'hit' event
                 pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"event": "hit"}))
             for shot in player_obj.shots:
                 if shot.hurtbox.colliderect(laser.hitbox):  # If a player bullet has hit a laser, destroy both
@@ -228,8 +260,7 @@ def game(difficulty):
                     except ValueError:
                         pass
 
-        player_obj.update()
-        pygame.draw.rect(SCREEN, COLOR_PLAYER, player_obj.hitbox, 0)
+        update_player(player_obj)
 
         update_lasers(lasers)
 
