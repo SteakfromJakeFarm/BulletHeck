@@ -3,7 +3,7 @@ import lib
 import time
 import math
 
-VERSION = '0.2'
+VERSION = '0.3'
 
 FRAMERATE = 60
 WINDOW_X = 600
@@ -12,6 +12,7 @@ LASER_THRESHOLD = 25
 TIME_LIMIT = 5
 PLAYER_COLLIDE = True
 PLAYER_SHOOT_COOLDOWN = 0.5
+PLAYER_SHOT_SPEED = 1
 PLAYER_SPEED = 1
 FONT = "Comic Sans MS"
 COLOR_START = (10, 10, 200)
@@ -33,9 +34,11 @@ TOGGLE_DEBUFFER = 0.2
 DEBUG_TIME_LIMIT = 99
 DEBUG_PLAYER_COLLIDE = False
 DEBUG_PLAYER_SHOOT_COOLDOWN = 0.0
+DEBUG_PLAYER_SHOT_SPEED = 3
 DEBUG_PLAYER_SPEED = 3
 DEBUG_COLOR_PLAYER = (100, 100, 100)
 DEBUG_COLOR_SCREEN = (100, 100, 100)
+DEBUG_SPRAY_DEBUFFER = 0.3
 
 pygame.init()
 
@@ -64,6 +67,7 @@ def main_menu(win,difficulty):
         CLOCK.tick(FRAMERATE)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                menu_running = False
                 menu_quit = True
 
         pressed = pygame.key.get_pressed()
@@ -168,9 +172,18 @@ def game(difficulty, debug_state=False):
             else:
                 pygame.draw.rect(SCREEN, COLOR_SHOT, shot.hurtbox, 0)
 
+    def shoot_spray():
+        j = 0.0
+        for i in range(0, 12, 1):
+            j += math.pi / 6
+            player_obj.shoot_angle(j)
+
     time_start = time.time()
     first_frame = True
     frame_count = 0
+    spray_toggle = False
+    spray_angle = 0.0
+    last_spray_toggle = time.time()
 
     pygame.event.clear()
 
@@ -230,16 +243,34 @@ def game(difficulty, debug_state=False):
 
         pressed = pygame.key.get_pressed()
 
-        if pressed[pygame.K_UP]:
+        if pressed[pygame.K_SPACE] and debug_state:
+            shoot_spray()
+
+        if pressed[pygame.K_r] and debug_state and (time.time() >= last_spray_toggle + DEBUG_SPRAY_DEBUFFER):
+            spray_toggle = not spray_toggle
+            last_spray_toggle = time.time()
+
+        if spray_toggle:
+            spray_angle += 0.1
+            player_obj.shoot_angle(spray_angle)
+            player_obj.shoot_angle(spray_angle + math.pi / 2)
+            player_obj.shoot_angle(spray_angle + 3 * math.pi / 2)
+            player_obj.shoot_angle(spray_angle + math.pi)
+            player_obj.shoot_angle(-spray_angle)
+            player_obj.shoot_angle(-(spray_angle + math.pi / 2))
+            player_obj.shoot_angle(-(spray_angle + 3 * math.pi / 2))
+            player_obj.shoot_angle(-(spray_angle + math.pi))
+
+        if pressed[pygame.K_UP] or pressed[pygame.K_w]:
             update_player(player_obj, pygame.K_UP)
 
-        if pressed[pygame.K_DOWN]:
+        if pressed[pygame.K_DOWN] or pressed[pygame.K_s]:
             update_player(player_obj, pygame.K_DOWN)
 
-        if pressed[pygame.K_RIGHT]:
+        if pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
             update_player(player_obj, pygame.K_RIGHT)
 
-        if pressed[pygame.K_LEFT]:
+        if pressed[pygame.K_LEFT] or pressed[pygame.K_a]:
             update_player(player_obj, pygame.K_LEFT)
 
         mouse_pressed = pygame.mouse.get_pressed()
