@@ -3,78 +3,84 @@ import lib
 import time
 import math
 
-VERSION = '0.3'
+VERSION = '0.3a'
 
-FRAMERATE = 60
-WINDOW_X = 600
-WINDOW_Y = 600
-LASER_THRESHOLD = 25
-TIME_LIMIT = 5
+FRAMERATE = 60  # Times per second that the loop runs
+WINDOW_X = 600  # Width of the game window in pixels
+WINDOW_Y = 600  # Length of the game window in pixels
+LASER_THRESHOLD = 25  # Base number of lasers that should be on screen at a time
+TIME_LIMIT = 10  # How long do you need to survive before you can pass to the next level?
 PLAYER_COLLIDE = True
-PLAYER_SHOOT_COOLDOWN = 0.5
-PLAYER_SHOT_SPEED = 1
-PLAYER_SPEED = 1
-FONT = "Comic Sans MS"
-COLOR_START = (10, 10, 200)
-COLOR_QUIT = (200, 0, 0)
-COLOR_SCREEN = (255, 255, 255)
-COLOR_TIMER = (100, 0, 255)
-COLOR_PLAYER = (0, 100, 0)
-COLOR_LASER = (100, 0, 100)
-COLOR_DED = (0, 0, 255)
-COLOR_WIN = (0, 200, 0)
-COLOR_SHOT = (255, 0, 0)
-COLOR_DIFFICULTY = (100, 50, 170)
-FONT_SIZE = 20
-LASER_MIN_SPEED = 1
-LASER_MULTIPLIER = 3
-LASER_RESPAWN = True
-TOGGLE_DEBUFFER = 0.2
+PLAYER_SHOOT_COOLDOWN = 0.5  # Time between the player's shots
+PLAYER_SHOT_SPEED = 1  # Multiplier of the player's shots' speed
+PLAYER_SPEED = 1  # Multiplier of the player's speed
+FONT = "Comic Sans MS"  # Font to be used in every menu
+COLOR_START = (10, 10, 200)  # Color of the "Start" option in the main menu
+COLOR_QUIT = (200, 10, 10)  # Color of the "Quit" option in the main menu
+COLOR_SCREEN = (255, 255, 255)  # Color of the game background
+COLOR_MENU_SCREEN = (255, 255, 255)  # Color of the main menu background
+COLOR_TIMER = (100, 0, 255)  # Color of the timer in the game
+COLOR_PLAYER = (0, 100, 0)  # Color of the player's hitbox
+COLOR_LASER = (100, 0, 100)  # Color of the lasers' hitboxes
+COLOR_DED = (0, 0, 255)  # Color of the message on the lose screen
+COLOR_WIN = (0, 200, 0)  # Color of the message on the win screen
+COLOR_SHOT = (255, 0, 0)  # Color of the player's bullets
+COLOR_DIFFICULTY = (100, 50, 170)  # Color of the difficulty counter
+FONT_SIZE = 20  # Size of the font of every piece of text
+LASER_MIN_SPEED = 1  # The lowest speed that a laser should ever go
+LASER_MULTIPLIER = 3  # Turns the random decimal of 0-1 to a larger, more usable number
+LASER_RESPAWN = True  # Should the lasers respawn once they move off screen?
+TOGGLE_DEBUFFER = 0.2  # Time between toggling cheat mode
 
-DEBUG_TIME_LIMIT = 99
-DEBUG_PLAYER_COLLIDE = False
-DEBUG_PLAYER_SHOOT_COOLDOWN = 0.0
-DEBUG_PLAYER_SHOT_SPEED = 3
-DEBUG_PLAYER_SPEED = 3
-DEBUG_COLOR_PLAYER = (100, 100, 100)
-DEBUG_COLOR_SCREEN = (100, 100, 100)
-DEBUG_SPRAY_DEBUFFER = 0.3
+DEBUG_TIME_LIMIT = 99  # Longer for easier debugging
+DEBUG_PLAYER_COLLIDE = False  # Invincibility for easier debugging
+DEBUG_PLAYER_SHOOT_COOLDOWN = 0.0  # No cooldown for easier debugging
+DEBUG_PLAYER_SHOT_SPEED = 3  # Faster shot speed for easier debugging
+DEBUG_PLAYER_SPEED = 3  # Faster move speed for easier debugging
+DEBUG_COLOR_PLAYER = (100, 100, 100)  # Different color to differentiate from normal mode
+DEBUG_COLOR_SCREEN = (100, 100, 100)  # Change the screen's color to signify the mode
+DEBUG_SPRAY_DEBUFFER = 0.3  # This is just for fun. Time between toggling the spray mode.
 
-pygame.init()
+pygame.init()  # Its a pygame thing. Idk. It tells me to call this first.
 
-SCREEN = pygame.display.set_mode((WINDOW_X, WINDOW_Y))
-CLOCK = pygame.time.Clock()
+SCREEN = pygame.display.set_mode((WINDOW_X, WINDOW_Y))  # Create screen on the display
+CLOCK = pygame.time.Clock()  # Create the clock object. Useful for implementing the framerate
 
 
-def toggle(x):
+def toggle(x):  # Using a function is more comfortable for me
     return not x
 
 
-def main_menu(win,difficulty):
-    menu_running = True
-    menu_quit = False
-    menu_spot = 0
-    debug_state = False
-    if win:
+def main_menu(win,difficulty):  # This function draws the main menu. Once the user select an option, it returns the result.
+    menu_running = True  # Is the menu running?
+    menu_quit = False  # Did the user want to quit?
+    menu_spot = 0  # Position that the cursor is over
+    debug_state = False  # Is debug(cheat) mode on?
+
+    if win:  # Did the user win the last round?
         label_start = pygame.font.SysFont(FONT, 20).render("Continue", 1, COLOR_START)
     else:
         label_start = pygame.font.SysFont(FONT, 20).render("Start", 1, COLOR_START)
+
     label_quit = pygame.font.SysFont(FONT, 20).render("Quit", 1, COLOR_QUIT)
     last_toggle = time.time()
-    pygame.event.clear()
+    pygame.event.clear()  # Prevents events from last round affecting the next round.
     while menu_running:
-        pygame.event.pump()
+        pygame.event.pump()  # pygame tells me that I should do this.
         CLOCK.tick(FRAMERATE)
+
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT:  # Happens when the user selects quit or closes with X
                 menu_running = False
                 menu_quit = True
 
-        pressed = pygame.key.get_pressed()
-        if pressed[pygame.K_c]:
-            if time.time() >= last_toggle + TOGGLE_DEBUFFER:
-                debug_state = toggle(debug_state)
-                last_toggle = time.time()
+        pressed = pygame.key.get_pressed()  # Make a list of every key that is being pressed down.
+
+        if pressed[pygame.K_c] and time.time() >= last_toggle + TOGGLE_DEBUFFER:  # Toggles cheat mode. assuming enough time has passed
+            debug_state = toggle(debug_state)
+            last_toggle = time.time()
+
+        # This chain moves the cursor
         if pressed[pygame.K_UP] and menu_spot > 0:
             menu_spot -= 1
         elif pressed[pygame.K_DOWN] and menu_spot < 1:
@@ -83,7 +89,7 @@ def main_menu(win,difficulty):
             menu_spot -= 1
         elif pressed[pygame.K_RIGHT] and menu_spot < 1:
             menu_spot += 1
-        elif pressed[pygame.K_RETURN]:
+        elif pressed[pygame.K_RETURN]:  # What to do if the user finalized a selection
             if menu_spot == 0:
                 menu_running = False
                 menu_quit = False
@@ -91,6 +97,7 @@ def main_menu(win,difficulty):
                 menu_running = False
                 menu_quit = True
 
+        # This chain draws the text on the menu
         if menu_spot == 0:
             if win:
                 label_start = pygame.font.SysFont(FONT, FONT_SIZE).render("Next Level  <--", 1, COLOR_START)
@@ -111,24 +118,27 @@ def main_menu(win,difficulty):
         SCREEN.blit(label_start, ((WINDOW_X / 2) - 50, (WINDOW_Y / 2 - 50)))
         SCREEN.blit(label_quit, ((WINDOW_X / 2) - 50, (WINDOW_Y / 2)))
 
+        # Display the current difficulty
         level = pygame.font.SysFont(FONT, FONT_SIZE).render(str(difficulty), 1, COLOR_DIFFICULTY)
         SCREEN.blit(level, (WINDOW_X - 50, 0))
 
-        pygame.display.flip()
+        pygame.display.flip()  # This is apparently required for things to be rendered
 
-    return menu_quit, debug_state
+    return menu_quit, debug_state  # Return if the user wanted to quit and if the user wanted to use debug mode
 
 
+# This function is the actual game loop. It changes based on the difficulty and is debug mode is on
 def game(difficulty, debug_state=False):
-    lasers = []
-    game_quit = False
-    game_running = True
+    lasers = []  # List of all the lasers
+    game_quit = False  # Does the user want to quit?
+    game_running = True  # Is the game running?
 
-    if debug_state:
+    if debug_state:  # If debug mode is on, change the way the player is created
         player_obj = lib.Player(DEBUG_PLAYER_SHOOT_COOLDOWN, DEBUG_PLAYER_SPEED, DEBUG_PLAYER_SHOT_SPEED)
     else:
         player_obj = lib.Player(PLAYER_SHOOT_COOLDOWN, PLAYER_SPEED, PLAYER_SHOT_SPEED)
 
+    # Draw the lasers and remove ones that go off screen
     def update_lasers(lasers_list):
         for laser in lasers_list:
             laser.update()
@@ -143,12 +153,14 @@ def game(difficulty, debug_state=False):
             else:
                 pygame.draw.rect(SCREEN, COLOR_LASER, laser.hitbox, 0)
 
+    # If the laser count is lower than we want, make more
     def make_lasers(laser_list, x, frame):
         for i in range(0, x, 1):
             if len(laser_list) < LASER_THRESHOLD * (difficulty/2.0) and (LASER_RESPAWN or frame):
                 laser_shot = lib.Laser(LASER_MIN_SPEED, LASER_MULTIPLIER + (difficulty/5.0))
                 laser_list.append(laser_shot)
 
+    # Change the player's cords based on what keys are pressed and draw the player
     def update_player(player, key=''):
         player.movement(key)
         player.update()
@@ -157,6 +169,7 @@ def game(difficulty, debug_state=False):
         else:
             pygame.draw.rect(SCREEN, COLOR_PLAYER, player.hitbox, 0)
 
+    # Draw the player's bullets and update their movement. Bullets that go off screen are removed
     def update_shots(shots_list):
         for shot in shots_list:
             shot.movement()
@@ -172,10 +185,11 @@ def game(difficulty, debug_state=False):
             else:
                 pygame.draw.rect(SCREEN, COLOR_SHOT, shot.hurtbox, 0)
 
-    def shoot_spray():
+    # This fires bullets in equal angles from eachother
+    def shoot_spray(parts):
         j = 0.0
         for i in range(0, 12, 1):
-            j += math.pi / 6
+            j += math.pi / parts
             player_obj.shoot_angle(j)
 
     time_start = time.time()
@@ -185,25 +199,27 @@ def game(difficulty, debug_state=False):
     spray_angle = 0.0
     last_spray_toggle = time.time()
 
-    pygame.event.clear()
+    pygame.event.clear()  # Good for the environment
 
     while game_running:
-        frame_count += 1
-        pygame.event.pump()
+        CLOCK.tick(FRAMERATE)
+        SCREEN.fill(COLOR_SCREEN)
 
+        frame_count += 1
+        pygame.event.pump()  # pygame wants me to do this. Please make them stop
+
+        # This determines the time passed.
         if debug_state:
             time_reached = time.time() >= time_start + DEBUG_TIME_LIMIT
         else:
             time_reached = time.time() >= time_start + TIME_LIMIT
 
+        # Once the player has survived the required time, he wins the level
         if time_reached:
                 pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"event": "win"}))
 
+        # Makes lasers when necessary
         make_lasers(lasers, 1, first_frame)
-
-        CLOCK.tick(FRAMERATE)
-
-        SCREEN.fill(COLOR_SCREEN)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -215,41 +231,43 @@ def game(difficulty, debug_state=False):
                 update_player(player_obj, key)
 
             elif event.type == pygame.USEREVENT:
-                if event.event == 'hit':
+                if event.event == 'hit':  # If the player gets hit, he dies
                     label = pygame.font.SysFont(FONT, FONT_SIZE).render("ded", 1, COLOR_DED)
                     SCREEN.blit(label, (300, 300))
                     pygame.display.flip()
 
-                    time.sleep(3)
+                    time.sleep(3)  # Allow time for player to understand what he did wrong.
 
                     for laser in lasers:  # Probably redundant. Better safe than sorry for now...
                         lasers.remove(laser)
 
                     game_running = False
-                    game_state = 'loose'
+                    game_state = 'lose'
 
                 elif event.event == 'win':
                     label = pygame.font.SysFont(FONT, FONT_SIZE).render("Win!", 1, COLOR_WIN)
                     SCREEN.blit(label, (300, 300))
                     pygame.display.flip()
 
-                    time.sleep(3)
+                    time.sleep(1)  # Allow only enough time for player to know that they aren't dead yet
 
-                    for laser in lasers:
+                    for laser in lasers:  # Probably redundant. Better safe than sorry for now...
                         lasers.remove(laser)
 
                     game_running = False
                     game_state = 'win'
 
-        pressed = pygame.key.get_pressed()
+        pressed = pygame.key.get_pressed()  # Make a list of every key that is being pressed down.
 
-        if pressed[pygame.K_SPACE] and debug_state:
-            shoot_spray()
+        if pressed[pygame.K_SPACE] and debug_state:  # Fun easter egg. Might make into a power-up later
+            shoot_spray(6)
 
+        # Another fun easter egg.
         if pressed[pygame.K_r] and debug_state and (time.time() >= last_spray_toggle + DEBUG_SPRAY_DEBUFFER):
             spray_toggle = not spray_toggle
             last_spray_toggle = time.time()
 
+        # Makes a spinning illusion.
         if spray_toggle:
             spray_angle += 0.1
             player_obj.shoot_angle(spray_angle)
@@ -273,7 +291,7 @@ def game(difficulty, debug_state=False):
         if pressed[pygame.K_LEFT] or pressed[pygame.K_a]:
             update_player(player_obj, pygame.K_LEFT)
 
-        mouse_pressed = pygame.mouse.get_pressed()
+        mouse_pressed = pygame.mouse.get_pressed()  # List of all mouse buttons pressed
 
         if mouse_pressed[0]:
             x, y = pygame.mouse.get_pos()
@@ -288,7 +306,7 @@ def game(difficulty, debug_state=False):
                     try:
                         lasers.remove(laser)
                         player_obj.shots.remove(shot)
-                    except ValueError:
+                    except ValueError:  # This happens when we try to delete something that doesnt exist
                         pass
 
         update_player(player_obj)
@@ -303,11 +321,9 @@ def game(difficulty, debug_state=False):
         level = pygame.font.SysFont(FONT, FONT_SIZE).render(str(difficulty), 1, COLOR_DIFFICULTY)
         SCREEN.blit(level, (WINDOW_X-50, 0))
 
-        if first_frame:
+        if first_frame:  # Test variable
             first_frame = False
 
-        pygame.display.flip()  # This is required to render the screen
+        pygame.display.flip()  # This is required by pygame to render the screen.
 
-        if game_quit:
-            return False
-    return game_state
+    return game_state, game_quit
