@@ -39,41 +39,53 @@ class Laser:
 
 
 class Player:
-    def __init__(self, shot_cooldown, speed, shot_speed):
-        self.cord_x = 300
-        self.cord_y = 300
+    def __init__(self, shot_cooldown, speed, shot_speed, x, y):
+        self.cord_x = x
+        self.cord_y = y
         self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)
         self.shots = []
         self.shot_cooldown = shot_cooldown
         self.shot_speed = shot_speed
         self.last_shot_time = 0
         self.speed = speed
+        self.powerup = 0
+        self.last_powerup_time = 0
+        self.last_powerup_duration = 0
 
-    def move_up(self):
-        if self.cord_y > 0:
-            self.cord_y -= 1 * self.speed
-
-    def move_down(self):
-        if self.cord_y < 590:
-            self.cord_y += 1 * self.speed
-
-    def move_right(self):
-        if self.cord_x < 590:
-            self.cord_x += 1 * self.speed
-
-    def move_left(self):
-        if self.cord_x > 0:
-            self.cord_x -= 1 * self.speed
-
-    def movement(self, key=''):
-        if key == pygame.K_UP:
-            self.move_up()
-        elif key == pygame.K_DOWN:
-            self.move_down()
-        elif key == pygame.K_RIGHT:
-            self.move_right()
-        elif key == pygame.K_LEFT:
-            self.move_left()
+    def movement(self):
+        pressed = pygame.key.get_pressed()
+        if (pressed[pygame.K_UP] or pressed[pygame.K_w]) and (pressed[pygame.K_DOWN] or pressed[pygame.K_s]):
+            pass
+        elif (pressed[pygame.K_LEFT] or pressed[pygame.K_a]) and (pressed[pygame.K_RIGHT] or pressed[pygame.K_d]):
+            pass
+        elif (pressed[pygame.K_UP] or pressed[pygame.K_w]) and (pressed[pygame.K_RIGHT] or pressed[pygame.K_d]):
+            if self.cord_x < 590 and self.cord_y > 0:
+                self.cord_x += math.cos(math.pi/4) * self.speed
+                self.cord_y -= math.sin(math.pi/4) * self.speed
+        elif (pressed[pygame.K_UP] or pressed[pygame.K_w]) and (pressed[pygame.K_LEFT] or pressed[pygame.K_a]):
+            if self.cord_x > 0 and self.cord_y > 0:
+                self.cord_x -= math.cos(math.pi/4) * self.speed
+                self.cord_y -= math.sin(math.pi/4) * self.speed
+        elif (pressed[pygame.K_DOWN] or pressed[pygame.K_s]) and (pressed[pygame.K_RIGHT] or pressed[pygame.K_d]):
+            if self.cord_x < 590 and self.cord_y < 590:
+                self.cord_x += math.cos(math.pi/4) * self.speed
+                self.cord_y += math.sin(math.pi/4) * self.speed
+        elif (pressed[pygame.K_DOWN] or pressed[pygame.K_s]) and (pressed[pygame.K_LEFT] or pressed[pygame.K_a]):
+            if self.cord_x > 0 and self.cord_y < 590:
+                self.cord_x -= math.cos(math.pi/4) * self.speed
+                self.cord_y += math.sin(math.pi/4) * self.speed
+        elif pressed[pygame.K_UP] or pressed[pygame.K_w]:
+            if self.cord_y > 0:
+                self.cord_y -= 1 * self.speed
+        elif pressed[pygame.K_DOWN] or pressed[pygame.K_s]:
+            if self.cord_y < 590:
+                self.cord_y += 1 * self.speed
+        elif pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
+            if self.cord_x < 590:
+                self.cord_x += 1 * self.speed
+        elif pressed[pygame.K_LEFT] or pressed[pygame.K_a]:
+            if self.cord_x > 0:
+                self.cord_x -= 1 * self.speed
         else:
             pass
 
@@ -83,8 +95,23 @@ class Player:
             self.shots.append(player_bullet)
             self.last_shot_time = time.time()
 
+    # This fires bullets in equal angles from eachother
+    def shoot_spray(self, parts):
+        if self.powerup == 1:
+            temp = self.shot_cooldown
+            self.shot_cooldown = 0.0
+            j = 0.0
+            for i in range(0, 12, 1):
+                j += math.pi / parts
+                self.shoot_angle(j)
+            self.shot_cooldown = temp
+
     def update(self):
         self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)
+        if self.powerup > 0 and (time.time() >= self.last_powerup_time + self.last_powerup_duration):
+            self.powerup = 0
+        if self.powerup == 1:
+            self.shoot_spray(6)
 
     def shoot_angle(self, angle):
         if time.time() >= self.last_shot_time + self.shot_cooldown:
@@ -126,9 +153,10 @@ class SpinShot(Shot):
         self.angle = angle
         self.speed = speed
 
-    def movement(self):
-        self.cord_x += math.cos(self.angle) * self.speed
-        self.cord_y += math.sin(self.angle) * self.speed
 
-    def update(self):
-        self.hurtbox = pygame.Rect(self.cord_x, self.cord_y, 5, 5)
+class PowerUp:
+    def __init__(self, id):
+        self.id = id
+        self.cord_x = random.randint(0, 590)
+        self.cord_y = random.randint(0, 590)
+        self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 15, 15)
