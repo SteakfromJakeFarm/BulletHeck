@@ -1,10 +1,10 @@
 import game
 
-real_running = True
+running = True
 i = 1
 win = False
-while real_running:
-    menu_quit, debug = game.main_menu(win, i)
+while running:
+    menu_quit, debug = game.main_menu(i, win)
 
     if menu_quit:
         break
