@@ -1,3 +1,4 @@
+import pygame
 import random
 from config import *
 
@@ -26,13 +27,19 @@ class Laser:
             self.speed = self.min_speed
         self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)
 
-    def update(self):
+    def update(self, time):
+        if time == 1:
+            temp_speed = self.speed * SPEED_SLOW
+        elif time == 2:
+            temp_speed = self.speed * SPEED_FAST
+        else:
+            temp_speed = self.speed
         if self.side == 0:
-            self.cord_y += 1 * self.speed
+            self.cord_y += 1 * temp_speed
         elif self.side == 1:
-            self.cord_y -= 1 * self.speed
+            self.cord_y -= 1 * temp_speed
         elif self.side == 2:
-            self.cord_x += 1 * self.speed
+            self.cord_x += 1 * temp_speed
         elif self.side == 3:
-            self.cord_x -= 1 * self.speed
+            self.cord_x -= 1 * temp_speed
         self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)

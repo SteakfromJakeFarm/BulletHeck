@@ -1,3 +1,4 @@
+import pygame
 import math
 import time
 from config import *
@@ -66,13 +67,14 @@ class Player:
             self.last_shot_time = time.time()
 
     # This fires bullets in equal angles from each other
-    def shoot_spray(self, parts, shot):
+    def shoot_spray(self, parts, shot, frame):
         if self.powerup == 1:
             j = 0.0
-            for i in range(0, 12, 1):
-                j += math.pi / parts
+            for i in range(0, parts, 1):
+                j += math.pi / math.radians(parts)
                 player_bullet = shot(angle=j, speed=self.shot_speed, px=self.cord_x, py=self.cord_y)
                 self.shots.append(player_bullet)
+            self.powerup = 0
 
     def shoot_angle(self, angle, shot):
         player_bullet = shot(angle=angle, px=self.cord_x, py=self.cord_y, speed=self.shot_speed)
