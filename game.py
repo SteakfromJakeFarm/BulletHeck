@@ -33,46 +33,43 @@ def main_menu(difficulty, win):  # Draws the main menu. Once the user select an 
 
 # This function is the actual game loop. It changes based on the difficulty and is debug mode is on
 def game(difficulty, debug_state=False):
-    timers = []
     lasers = []  # List of all the lasers
+    bombs = []
     game_quit = False  # Does the user want to quit?
     game_running = True  # Is the game running?
     game_state = ''
-    timers.append(time.time())  # time_start
     frame_count = 0
     spray_toggle = False
     spray_angle = 0.0
-    timers.append(time.time())  # last_spray_toggle
-    last_debug_state = debug_state
-    timers.append(time.time())  # last_debug_toggle
-    timers.append(time.time())  # last_time_change
+    timers = {
+        'time_start': time.time(),
+        'last_spray_toggle': time.time(),
+        'last_debug_toggle': time.time(),
+        'last_time_change': time.time()
+    }
     time_change = 0
     powerups = []
 
     pygame.event.clear()  # Good for the environment
 
-    player_obj = Player.Player(300, 300, debug_state)
+    player_obj = Player.Player(300, 300, [])
+    player_obj.debug = debug_state
+    player_obj.refresh_debug()
 
     while game_running:
+        frame_count += 1
+
         CLOCK.tick(FRAMERATE)
         SCREEN.fill(COLOR_SCREEN)
 
-        frame_count += 1
-
-        last_debug_state, spray_angle, spray_toggle = \
-            update_player(player_obj, last_debug_state, spray_angle, spray_toggle, debug_state)
-
-        try:
-            player_obj, last_debug_state, timers = \
-                update_player_debug(player_obj, last_debug_state, timers, debug_state)
-        except TypeError:
-            pass
+        spray_angle, spray_toggle = \
+            update_player(player_obj, spray_angle, spray_toggle, debug_state, bombs)
 
         draw_gui(timers, difficulty)
 
         make_lasers(lasers, difficulty)
 
-        check_time(debug_state, timers[0])
+        check_time(debug_state, timers)
 
         update_mouse(player_obj)
 
@@ -80,18 +77,20 @@ def game(difficulty, debug_state=False):
             update_events(game_running, game_state, game_quit, lasers)
 
         debug_state, last_spray_toggle, spray_toggle, time_change = \
-            update_keyboard(debug_state, timers, spray_toggle, player_obj, frame_count, time_change)
+            update_keyboard(debug_state, timers, spray_toggle, player_obj, time_change)
 
-        spawn_powerups(0.10, powerups)  # Chance that a powerup will spawn on any given second
+        spawn_powerups(POWERUP_CHANCE, powerups)  # Chance that a powerup will spawn on any given second
 
         update_lasers(lasers, time_change)
 
+        update_bombs(player_obj, bombs)
+
         update_shots(player_obj.shots)
+
+        check_collisions(lasers, player_obj)
 
         time_change, spray_angle =\
             update_powerups(powerups, player_obj, frame_count, time_change, spray_angle)
-
-        check_collisions(lasers, player_obj, debug_state)
 
         pygame.display.flip()  # This is required by pygame to render the screen.
 

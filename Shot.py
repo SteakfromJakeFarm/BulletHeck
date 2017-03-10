@@ -3,12 +3,13 @@ import math
 
 
 class Shot:
-    def __init__(self, angle=False, mx=0, my=0, px=0, py=0, speed=1):
+    def __init__(self, angle=False, mx=0, my=0, px=0, py=0, speed=1, size=(5, 5)):
         self.cord_x = px
         self.cord_y = py
         self.mouse_x = mx
         self.mouse_y = my
-        self.hurtbox = pygame.Rect(self.cord_x, self.cord_y, 5, 5)
+        self.size_x, self.size_y = size
+        self.hurtbox = pygame.Rect(self.cord_x, self.cord_y, self.size_x, self.size_y)
         self.angle = angle
         self.speed = speed
         if not self.angle:
@@ -25,4 +26,4 @@ class Shot:
         self.cord_x += math.cos(self.angle) * self.speed
 
     def update(self):
-        self.hurtbox = pygame.Rect(self.cord_x, self.cord_y, 5, 5)
+        self.hurtbox = pygame.Rect(self.cord_x, self.cord_y, self.size_x, self.size_y)

@@ -98,6 +98,8 @@ def update_lasers(lasers_list, time_change):
         r += laser.speed*50
         if b < 0:
             b = 0
+        if r > 255:
+            r = 255
         adjusted_color = (r, g, b)
         if laser.cord_x > 620 and laser.side == 2:
             lasers_list.remove(laser)
@@ -113,40 +115,32 @@ def update_lasers(lasers_list, time_change):
 
 # If the laser count is lower than we want, make more
 def make_lasers(laser_list, difficulty):
-    if len(laser_list) < LASER_THRESHOLD * (difficulty/5.0) and LASER_RESPAWN:
+    if len(laser_list) < (LASER_THRESHOLD * (difficulty/LASER_DIVIDE)) + LASER_ADD and LASER_RESPAWN:
         laser_shot = Laser.Laser(difficulty)
         laser_list.append(laser_shot)
 
 
 # Change the player's cords based on what keys are pressed and draw the player
-def update_player(player_obj, last_debug_state, spray_angle, spray_toggle, debug_state):
+def update_player(player_obj, spray_angle, spray_toggle, debug_state, bombs):
     player_obj.movement()
-    player_obj.update()
+    player_obj.update(bombs)
+    player_obj.debug = debug_state
+    player_obj.refresh_debug()
     if debug_state:
         pygame.draw.rect(SCREEN, DEBUG_COLOR_PLAYER, player_obj.hitbox, 0)
     else:
-        pygame.draw.rect(SCREEN, COLOR_PLAYER, player_obj.hitbox, 0)
+        pygame.draw.rect(SCREEN, player_obj.adjusted_color, player_obj.hitbox, 0)
 
     # Makes a spinning illusion.
     if spray_toggle and debug_state:
         spray_angle = spray(Shot.Shot, spray_angle, player_obj)
 
-    return last_debug_state, spray_angle, spray_toggle
-
-
-def update_player_debug(player_obj, last_debug_state, timers, debug_state):
-    # If debug mode has changed, change the player
-    if (last_debug_state != debug_state) and (time.time() >= timers[2] + 0.3):
-        last_debug_state = debug_state
-        timers[2] = time.time()
-        player_obj = Player.Player(player_obj.cord_x, player_obj.cord_y, debug_state)
-        return player_obj, last_debug_state, timers
-    return False
+    return spray_angle, spray_toggle
 
 
 def spawn_powerups(chance, powerups):
     if random.random() <= chance/FRAMERATE:  # This makes it so that the chance is per second
-        x = PowerUp.PowerUp(random.randint(1, 3))
+        x = PowerUp.PowerUp(random.randint(1, 6))
         powerups.append(x)
 
 
@@ -155,32 +149,53 @@ def update_powerups(powerups, player_obj, frame, time_change, spray_angle):
         if i.id == 1:
             pygame.draw.rect(SCREEN, (10, 10, 255), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
-                player_obj.last_powerup_time = time.time()
-                player_obj.powerup = 1
-                player_obj.last_powerup_duration = 1
+                player_obj.give_powerup(1)
                 powerups.remove(i)
         elif i.id == 2:
             pygame.draw.rect(SCREEN, (200, 200, 10), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
-                player_obj.last_powerup_time = time.time()
-                player_obj.powerup = 2
-                player_obj.last_powerup_duration = 3
+                player_obj.give_powerup(2, 3)
                 powerups.remove(i)
         elif i.id == 3:
             pygame.draw.rect(SCREEN, (10, 200, 100), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
-                player_obj.last_powerup_time = time.time()
-                player_obj.powerup = 3
-                player_obj.last_powerup_duration = 1
+                player_obj.give_powerup(3)
                 powerups.remove(i)
+        elif i.id == 4:
+            pygame.draw.rect(SCREEN, (255, 50, 150), i.hitbox)
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(4, 5)
+                powerups.remove(i)
+        elif i.id == 5:
+            pygame.draw.rect(SCREEN, (0, 50, 100), i.hitbox)
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(5, 3)
+                powerups.remove(i)
+        elif i.id == 6:
+            pygame.draw.rect(SCREEN, (140, 90, 70), i.hitbox)
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(6, 4)
+                powerups.remove(i)
+
     if player_obj.powerup == 1:
         player_obj.shoot_spray(360, Shot.Shot, frame)
     elif player_obj.powerup == 2:
         time_change = 1
     elif player_obj.powerup == 3:
         spray_angle = spray(Shot.Shot, spray_angle, player_obj)
+    elif player_obj.powerup == 4:
+        player_obj.collide = False
+        player_obj.adjusted_color = (150, 150, 150)
+    elif player_obj.powerup == 5:
+        player_obj.shot_size = (20, 20)
+    elif player_obj.powerup == 6:
+        player_obj.bombs = True
     elif player_obj.powerup == 0:
         time_change = 0
+        player_obj.collide = True
+        player_obj.adjusted_color = (0, 150, 0)
+        player_obj.shot_size = (5, 6)
+        player_obj.bombs = False
     else:
         time_change = time_change
     return time_change, spray_angle
@@ -203,11 +218,11 @@ def update_shots(shots_list):
             pygame.draw.rect(SCREEN, COLOR_SHOT, shot.hurtbox, 0)
 
 
-def check_collisions(lasers, player_obj, debug_state):
+def check_collisions(lasers, player_obj):
     # check for collisions with player or player's lasers
     for laser in lasers:
-        if player_obj.hitbox.colliderect(
-                laser.hitbox) and not debug_state:  # If player has hit a laser, post a 'hit' event
+        if player_obj.hitbox.colliderect(laser.hitbox) and player_obj.collide:
+            # If player has hit a laser, post a 'hit' event
             pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"event": "hit"}))
         for shot in player_obj.shots:
             if shot.hurtbox.colliderect(laser.hitbox):  # If a player bullet has hit a laser, destroy both
@@ -219,7 +234,7 @@ def check_collisions(lasers, player_obj, debug_state):
 
 
 def draw_gui(timers, difficulty):
-    timer = pygame.font.SysFont(FONT, FONT_SIZE).render(str(int(time.time() - timers[0])), 1, COLOR_TIMER)
+    timer = pygame.font.SysFont(FONT, FONT_SIZE).render(str(int(time.time() - timers['time_start'])), 1, COLOR_TIMER)
     SCREEN.blit(timer, (0, 0))
 
     level = pygame.font.SysFont(FONT, FONT_SIZE).render(str(difficulty), 1, COLOR_DIFFICULTY)
@@ -277,19 +292,16 @@ def update_events(game_running, game_quit, game_state, lasers):
     return game_running, game_state, game_quit
 
 
-def update_keyboard(debug_state, timers, spray_toggle, player_obj, frame, time_change):
+def update_keyboard(debug_state, timers, spray_toggle, player_obj, time_change):
     pressed = pygame.key.get_pressed()  # Make a list of every key that is being pressed down.
 
-    if pressed[pygame.K_SPACE] and debug_state:  # Fun easter egg. Might make into a power-up later
-        player_obj.powerup = 1
-        player_obj.last_powerup_duration = 1
-        player_obj.shoot_spray(6, Shot.Shot, frame)
-
-    if pressed[pygame.K_c] and time.time() >= timers[2] + 0.3:
+    if pressed[pygame.K_c] and time.time() >= timers['last_debug_toggle'] + 0.3:
         debug_state = not debug_state
-        timers[2] = time.time()
+        player_obj.debug = debug_state
+        player_obj.refresh_debug()
+        timers['last_debug_toggle'] = time.time()
 
-    if pressed[pygame.K_v] and time.time() >= timers[3] + 0.3:
+    if pressed[pygame.K_v] and time.time() >= timers['last_time_change'] + 0.3:
         if time_change == 0:
             time_change = 1
         elif time_change == 1:
@@ -299,12 +311,12 @@ def update_keyboard(debug_state, timers, spray_toggle, player_obj, frame, time_c
         else:
             print("If you see this, let the developer know!")
             print("Error No. 5")
-        timers[3] = time.time()
+        timers['last_time_change'] = time.time()
 
     # Another fun easter egg.
-    if pressed[pygame.K_r] and debug_state and (time.time() >= timers[1] + DEBUG_SPRAY_DEBUFFER):
-        spray_toggle = not spray_toggle
-        timers[1] = time.time()
+    if pressed[pygame.K_r] and debug_state and (time.time() >= timers['last_spray_toggle'] + DEBUG_SPRAY_DEBUFFER):
+        player_obj.give_powerup(3)
+        timers['last_spray_toggle'] = time.time()
     return debug_state, timers, spray_toggle, time_change
 
 
@@ -314,15 +326,24 @@ def update_mouse(player_obj):
     if mouse_pressed[0]:
         x, y = pygame.mouse.get_pos()
         player_obj.shoot(x, y, Shot.Shot)
+    if mouse_pressed[2]:
+        x, y = pygame.mouse.get_pos()
+        player_obj.shoot_burst(x, y, Shot.Shot)
 
 
-def check_time(debug_state, time_start):
+def check_time(debug_state, timers):
     # This determines the time passed.
     if debug_state:
-        time_reached = time.time() >= time_start + DEBUG_TIME_LIMIT
+        time_reached = time.time() >= timers['time_start'] + DEBUG_TIME_LIMIT
     else:
-        time_reached = time.time() >= time_start + TIME_LIMIT
+        time_reached = time.time() >= timers['time_start'] + TIME_LIMIT
         # Once the player has survived the required time, he wins the level
     if time_reached:
         pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"event": "win"}))
     return time_reached
+
+
+def update_bombs(player_obj, bombs):
+    for bomb in bombs:
+        bomb.tick(player_obj, bombs)
+        pygame.draw.rect(SCREEN, bomb.color, bomb.hitbox)
