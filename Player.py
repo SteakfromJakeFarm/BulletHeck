@@ -9,7 +9,8 @@ class Player:
     def __init__(self, x, y, shots):
         self.cord_x = x
         self.cord_y = y
-        self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)
+        self.size_x, self.size_y = (10, 10)
+        self.hitbox = pygame.Rect(self.cord_x, self.cord_y, self.size_x, self.size_y)
         self.shots = shots
         self.adjusted_color = COLOR_PLAYER
         self.debug = False
@@ -107,7 +108,7 @@ class Player:
             self.last_burst_shot_time = time.time()
 
     def update(self, bombs):
-        self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)
+        self.hitbox = pygame.Rect(self.cord_x, self.cord_y, self.size_x, self.size_y)
         if self.powerup > 0 and (time.time() >= self.powerup_time + self.powerup_duration):
             self.powerup = 0
         if self.powerup == 6:

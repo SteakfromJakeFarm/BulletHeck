@@ -38,7 +38,7 @@ FONT_SIZE = 20  # Size of the font of every piece of text
 TOGGLE_DEBUFFER = 0.2  # Time between toggling cheat mode
 SPEED_SLOW = 0.25  # Speed multiplier of the slowdown powerup
 SPEED_FAST = 2.0  # Speed multiplier of the speedup powerup
-POWERUP_CHANCE = 0.20  # Chance that a powerup will spawn any given second. 0-1
+POWERUP_CHANCE = 0.15  # Chance that a powerup will spawn any given second. 0-1
 
 DEBUG_TIME_LIMIT = 99  # Longer for easier debugging
 DEBUG_PLAYER_COLLIDE = False  # Invincibility for easier debugging

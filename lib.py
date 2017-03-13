@@ -16,8 +16,13 @@ def update_events_menu():
     return True
 
 
-def update_keyboard_menu(menu_spot, last_toggle, debug_state):
+def update_keyboard_menu(menu_spot, last_toggle, debug_state, frame):
     pressed = pygame.key.get_pressed()  # Make a list of every key that is being pressed down.
+
+    if frame == 1:  # Fixes bug in which pressed from last game can move the cursor to quit on first frame
+        pressed = []
+        for i in range(0, 300):
+            pressed.append(0)
 
     if pressed[pygame.K_c] and time.time() >= last_toggle + TOGGLE_DEBUFFER:
         # Toggles cheat mode. assuming enough time has passed
@@ -140,14 +145,14 @@ def update_player(player_obj, spray_angle, spray_toggle, debug_state, bombs):
 
 def spawn_powerups(chance, powerups):
     if random.random() <= chance/FRAMERATE:  # This makes it so that the chance is per second
-        x = PowerUp.PowerUp(random.randint(1, 6))
+        x = PowerUp.PowerUp(random.randint(1, 8))
         powerups.append(x)
 
 
 def update_powerups(powerups, player_obj, frame, time_change, spray_angle):
     for i in powerups:
         if i.id == 1:
-            pygame.draw.rect(SCREEN, (10, 10, 255), i.hitbox)
+            pygame.draw.rect(SCREEN, (120, 120, 255), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(1)
                 powerups.remove(i)
@@ -176,6 +181,23 @@ def update_powerups(powerups, player_obj, frame, time_change, spray_angle):
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(6, 4)
                 powerups.remove(i)
+        elif i.id == 7:
+            pygame.draw.rect(SCREEN, (0, 0, 0), i.hitbox)
+            pygame.draw.rect(SCREEN, (255, 50, 50), pygame.Rect(i.cord_x+4, i.cord_y+4, 7, 7))
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(7, 3)
+                powerups.remove(i)
+        elif i.id == 8:
+            pygame.draw.rect(SCREEN, (0, 255, 0), i.hitbox)
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 4, i.cord_y, 7, 2))
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 2, i.cord_y + 2, 2, 2))
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 11, i.cord_y + 2, 2, 6))
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 5, i.cord_y + 8, 6, 2))
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 5, i.cord_y + 10, 2, 2))
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 5, i.cord_y + 13, 2, 2))
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(random.randint(1, 7))
+                powerups.remove(i)
 
     if player_obj.powerup == 1:
         player_obj.shoot_spray(360, Shot.Shot, frame)
@@ -190,14 +212,18 @@ def update_powerups(powerups, player_obj, frame, time_change, spray_angle):
         player_obj.shot_size = (20, 20)
     elif player_obj.powerup == 6:
         player_obj.bombs = True
+    elif player_obj.powerup == 7:
+        player_obj.size_x, player_obj.size_y = (6, 6)
     elif player_obj.powerup == 0:
         time_change = 0
         player_obj.collide = True
         player_obj.adjusted_color = (0, 150, 0)
         player_obj.shot_size = (5, 6)
         player_obj.bombs = False
+        player_obj.size_x, player_obj.size_y = (10, 10)
     else:
-        time_change = time_change
+        print("Error No. 7")
+        print("If you see this, please let the developer know!")
     return time_change, spray_angle
 
 
@@ -215,7 +241,7 @@ def update_shots(shots_list):
         elif shot.cord_y < 1:
             shots_list.remove(shot)
         else:
-            pygame.draw.rect(SCREEN, COLOR_SHOT, shot.hurtbox, 0)
+            pygame.draw.circle(SCREEN, COLOR_SHOT, (int(shot.cord_x), int(shot.cord_y)), 4, 0)
 
 
 def check_collisions(lasers, player_obj):

@@ -13,16 +13,18 @@ def main_menu(difficulty, win):  # Draws the main menu. Once the user select an 
     debug_state = False  # Is debug(cheat) mode on?
     last_toggle = time.time()
     pygame.event.clear()  # Prevents events from last round affecting the next round.
+    frame = 0
     while menu_running:
+        frame += 1
         pygame.event.pump()  # pygame tells me that I should do this.
         CLOCK.tick(FRAMERATE)
 
-        if not update_events_menu():
+        if not update_events_menu():  # Returns false if player selected quit or tried to close it
             menu_quit = True
             break
 
         menu_spot, last_toggle, debug_state, menu_running, menu_quit = \
-            update_keyboard_menu(menu_spot, last_toggle, debug_state)
+            update_keyboard_menu(menu_spot, last_toggle, debug_state, frame)
 
         draw_gui_menu(menu_spot, debug_state, win, difficulty)
 
@@ -62,13 +64,6 @@ def game(difficulty, debug_state=False):
         CLOCK.tick(FRAMERATE)
         SCREEN.fill(COLOR_SCREEN)
 
-        spray_angle, spray_toggle = \
-            update_player(player_obj, spray_angle, spray_toggle, debug_state, bombs)
-
-        draw_gui(timers, difficulty)
-
-        make_lasers(lasers, difficulty)
-
         check_time(debug_state, timers)
 
         update_mouse(player_obj)
@@ -79,18 +74,25 @@ def game(difficulty, debug_state=False):
         debug_state, last_spray_toggle, spray_toggle, time_change = \
             update_keyboard(debug_state, timers, spray_toggle, player_obj, time_change)
 
-        spawn_powerups(POWERUP_CHANCE, powerups)  # Chance that a powerup will spawn on any given second
-
-        update_lasers(lasers, time_change)
-
         update_bombs(player_obj, bombs)
 
         update_shots(player_obj.shots)
 
-        check_collisions(lasers, player_obj)
+        spray_angle, spray_toggle = \
+            update_player(player_obj, spray_angle, spray_toggle, debug_state, bombs)
 
-        time_change, spray_angle =\
+        spawn_powerups(POWERUP_CHANCE, powerups)  # Chance that a powerup will spawn on any given second
+
+        update_lasers(lasers, time_change)
+
+        time_change, spray_angle = \
             update_powerups(powerups, player_obj, frame_count, time_change, spray_angle)
+
+        make_lasers(lasers, difficulty)
+
+        draw_gui(timers, difficulty)
+
+        check_collisions(lasers, player_obj)
 
         pygame.display.flip()  # This is required by pygame to render the screen.
 

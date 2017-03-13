@@ -1,3 +1,4 @@
+from config import *
 import pygame
 import math
 
@@ -27,3 +28,4 @@ class Shot:
 
     def update(self):
         self.hurtbox = pygame.Rect(self.cord_x, self.cord_y, self.size_x, self.size_y)
+        pygame.draw.circle(SCREEN, COLOR_SHOT, (int(self.cord_x), int(self.cord_y)), int(self.size_x/2), 0)
