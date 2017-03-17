@@ -13,11 +13,11 @@ class Bomb:
         self.cord_y = py
         self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)
 
-    def tick(self, player_obj, bombs):
+    def tick(self, player_obj):
         if time.time() >= self.time_start + self.fuse:
             angle = 0
             for i in range(1, 8, 1):
                 angle += 360/8
                 new_shot = Shot(angle=i, px=self.cord_x, py=self.cord_y)
                 player_obj.shots.append(new_shot)
-            bombs.remove(self)
+            player_obj.bombs.remove(self)

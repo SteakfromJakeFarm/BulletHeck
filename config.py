@@ -1,6 +1,6 @@
 import pygame
 
-VERSION = '0.3b'
+VERSION = '0.4'
 FRAMERATE = 60  # Times per second that the loop runs
 WINDOW_X = 600  # Width of the game window in pixels
 WINDOW_Y = 600  # Length of the game window in pixels
@@ -34,11 +34,14 @@ COLOR_DED = (0, 0, 255)  # Color of the message on the lose screen
 COLOR_WIN = (0, 200, 0)  # Color of the message on the win screen
 COLOR_SHOT = (255, 0, 0)  # Color of the player's bullets
 COLOR_DIFFICULTY = (100, 50, 170)  # Color of the difficulty counter
+COLOR_OTHERS = (0, 0, 0)
 FONT_SIZE = 20  # Size of the font of every piece of text
 TOGGLE_DEBUFFER = 0.2  # Time between toggling cheat mode
 SPEED_SLOW = 0.25  # Speed multiplier of the slowdown powerup
 SPEED_FAST = 2.0  # Speed multiplier of the speedup powerup
 POWERUP_CHANCE = 0.15  # Chance that a powerup will spawn any given second. 0-1
+SHOT_RADIUS = 4
+POWERUPS = 8  # Number of unique powerup types
 
 DEBUG_TIME_LIMIT = 99  # Longer for easier debugging
 DEBUG_PLAYER_COLLIDE = False  # Invincibility for easier debugging

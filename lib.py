@@ -1,9 +1,9 @@
-import pygame
+# import pygame
 import random
-import math
+# import math
 import time
 import Laser
-import Player
+# import Player
 import Shot
 import PowerUp
 from config import *
@@ -126,21 +126,18 @@ def make_lasers(laser_list, difficulty):
 
 
 # Change the player's cords based on what keys are pressed and draw the player
-def update_player(player_obj, spray_angle, spray_toggle, debug_state, bombs):
-    player_obj.movement()
-    player_obj.update(bombs)
-    player_obj.debug = debug_state
-    player_obj.refresh_debug()
-    if debug_state:
-        pygame.draw.rect(SCREEN, DEBUG_COLOR_PLAYER, player_obj.hitbox, 0)
-    else:
-        pygame.draw.rect(SCREEN, player_obj.adjusted_color, player_obj.hitbox, 0)
+def update_player(player_obj, debug_state):
+    player_obj.movement()  # Change player's cords based on key pressed
+    time_change, label = player_obj.update()  # Remake hitbox and do powerup related things
+    player_obj.debug = debug_state  # Change the player's debug state
+    player_obj.refresh_debug()  # Update the player's properties to match the new debug_state
+
+    # Draw the player to the screen
+    pygame.draw.rect(SCREEN, player_obj.adjusted_color, player_obj.hitbox, 0)
 
     # Makes a spinning illusion.
-    if spray_toggle and debug_state:
-        spray_angle = spray(Shot.Shot, spray_angle, player_obj)
 
-    return spray_angle, spray_toggle
+    return time_change, label
 
 
 def spawn_powerups(chance, powerups):
@@ -149,45 +146,59 @@ def spawn_powerups(chance, powerups):
         powerups.append(x)
 
 
-def update_powerups(powerups, player_obj, frame, time_change, spray_angle):
+def update_powerups(powerups, player_obj):
     for i in powerups:
         if i.id == 1:
+            # Ring powerup
+            # Light blue
             pygame.draw.rect(SCREEN, (120, 120, 255), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(1)
                 powerups.remove(i)
         elif i.id == 2:
+            # Slow time powerup
+            # Yellow
             pygame.draw.rect(SCREEN, (200, 200, 10), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(2, 3)
                 powerups.remove(i)
         elif i.id == 3:
+            # Spin spray powerup
+            # Teal
             pygame.draw.rect(SCREEN, (10, 200, 100), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(3)
                 powerups.remove(i)
         elif i.id == 4:
+            #
             pygame.draw.rect(SCREEN, (255, 50, 150), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(4, 5)
                 powerups.remove(i)
         elif i.id == 5:
+            # Bomb powerup
+            # Black
             pygame.draw.rect(SCREEN, (0, 50, 100), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(5, 3)
                 powerups.remove(i)
         elif i.id == 6:
+            # Big Bullets powerup
+            # Brown
             pygame.draw.rect(SCREEN, (140, 90, 70), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(6, 4)
                 powerups.remove(i)
         elif i.id == 7:
+            # Black background, red center
             pygame.draw.rect(SCREEN, (0, 0, 0), i.hitbox)
             pygame.draw.rect(SCREEN, (255, 50, 50), pygame.Rect(i.cord_x+4, i.cord_y+4, 7, 7))
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(7, 3)
                 powerups.remove(i)
         elif i.id == 8:
+            # Random powerup
+            # This draws a black question mark on a green background
             pygame.draw.rect(SCREEN, (0, 255, 0), i.hitbox)
             pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 4, i.cord_y, 7, 2))
             pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 2, i.cord_y + 2, 2, 2))
@@ -199,49 +210,22 @@ def update_powerups(powerups, player_obj, frame, time_change, spray_angle):
                 player_obj.give_powerup(random.randint(1, 7))
                 powerups.remove(i)
 
-    if player_obj.powerup == 1:
-        player_obj.shoot_spray(360, Shot.Shot, frame)
-    elif player_obj.powerup == 2:
-        time_change = 1
-    elif player_obj.powerup == 3:
-        spray_angle = spray(Shot.Shot, spray_angle, player_obj)
-    elif player_obj.powerup == 4:
-        player_obj.collide = False
-        player_obj.adjusted_color = (150, 150, 150)
-    elif player_obj.powerup == 5:
-        player_obj.shot_size = (20, 20)
-    elif player_obj.powerup == 6:
-        player_obj.bombs = True
-    elif player_obj.powerup == 7:
-        player_obj.size_x, player_obj.size_y = (6, 6)
-    elif player_obj.powerup == 0:
-        time_change = 0
-        player_obj.collide = True
-        player_obj.adjusted_color = (0, 150, 0)
-        player_obj.shot_size = (5, 6)
-        player_obj.bombs = False
-        player_obj.size_x, player_obj.size_y = (10, 10)
-    else:
-        print("Error No. 7")
-        print("If you see this, please let the developer know!")
-    return time_change, spray_angle
-
 
 # Draw the player's bullets and update their movement. Bullets that go off screen are removed
 def update_shots(shots_list):
     for shot in shots_list:
         shot.movement()
         shot.update()
-        if shot.cord_x > 620:
+        if shot.cord_x > WINDOW_X + shot.size_x:
             shots_list.remove(shot)
-        elif shot.cord_x < 1:
+        elif shot.cord_x < 0 - shot.size_x:
             shots_list.remove(shot)
-        elif shot.cord_y > 620:
+        elif shot.cord_y > WINDOW_Y + shot.size_y:
             shots_list.remove(shot)
-        elif shot.cord_y < 1:
+        elif shot.cord_y < 0 - shot.size_y:
             shots_list.remove(shot)
         else:
-            pygame.draw.circle(SCREEN, COLOR_SHOT, (int(shot.cord_x), int(shot.cord_y)), 4, 0)
+            pygame.draw.circle(SCREEN, COLOR_SHOT, (int(shot.cord_x), int(shot.cord_y)), SHOT_RADIUS, 0)
 
 
 def check_collisions(lasers, player_obj):
@@ -259,25 +243,15 @@ def check_collisions(lasers, player_obj):
                     pass
 
 
-def draw_gui(timers, difficulty):
+def draw_gui(timers, difficulty, powerup_text):
     timer = pygame.font.SysFont(FONT, FONT_SIZE).render(str(int(time.time() - timers['time_start'])), 1, COLOR_TIMER)
     SCREEN.blit(timer, (0, 0))
 
     level = pygame.font.SysFont(FONT, FONT_SIZE).render(str(difficulty), 1, COLOR_DIFFICULTY)
     SCREEN.blit(level, (WINDOW_X - 50, 0))
 
-
-def spray(shot, spray_angle, player_obj):
-    spray_angle += 0.1
-    player_obj.shoot_angle(spray_angle, shot)
-    player_obj.shoot_angle(spray_angle + math.pi / 2, shot)
-    player_obj.shoot_angle(spray_angle + 3 * math.pi / 2, shot)
-    player_obj.shoot_angle(spray_angle + math.pi, shot)
-    player_obj.shoot_angle(-spray_angle, shot)
-    player_obj.shoot_angle(-(spray_angle + math.pi / 2), shot)
-    player_obj.shoot_angle(-(spray_angle + 3 * math.pi / 2), shot)
-    player_obj.shoot_angle(-(spray_angle + math.pi), shot)
-    return spray_angle
+    powerup_display = pygame.font.SysFont(FONT, FONT_SIZE).render(powerup_text, 1, COLOR_OTHERS)
+    SCREEN.blit(powerup_display, (((WINDOW_X-(len(powerup_text)*FONT_SIZE/2))/2), WINDOW_Y * 7/8))
 
 
 def update_events(game_running, game_quit, game_state, lasers):
@@ -369,7 +343,7 @@ def check_time(debug_state, timers):
     return time_reached
 
 
-def update_bombs(player_obj, bombs):
-    for bomb in bombs:
-        bomb.tick(player_obj, bombs)
+def update_bombs(player_obj):
+    for bomb in player_obj.bombs:
+        bomb.tick(player_obj)
         pygame.draw.rect(SCREEN, bomb.color, bomb.hitbox)

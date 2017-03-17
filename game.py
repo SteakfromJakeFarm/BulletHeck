@@ -42,7 +42,6 @@ def game(difficulty, debug_state=False):
     game_state = ''
     frame_count = 0
     spray_toggle = False
-    spray_angle = 0.0
     timers = {
         'time_start': time.time(),
         'last_spray_toggle': time.time(),
@@ -54,7 +53,7 @@ def game(difficulty, debug_state=False):
 
     pygame.event.clear()  # Good for the environment
 
-    player_obj = Player.Player(300, 300, [])
+    player_obj = Player.Player(300, 300, [], [])
     player_obj.debug = debug_state
     player_obj.refresh_debug()
 
@@ -74,23 +73,22 @@ def game(difficulty, debug_state=False):
         debug_state, last_spray_toggle, spray_toggle, time_change = \
             update_keyboard(debug_state, timers, spray_toggle, player_obj, time_change)
 
-        update_bombs(player_obj, bombs)
+        update_bombs(player_obj)
 
         update_shots(player_obj.shots)
 
-        spray_angle, spray_toggle = \
-            update_player(player_obj, spray_angle, spray_toggle, debug_state, bombs)
+        time_change, powerup_display = \
+            update_player(player_obj, debug_state)
 
         spawn_powerups(POWERUP_CHANCE, powerups)  # Chance that a powerup will spawn on any given second
 
         update_lasers(lasers, time_change)
 
-        time_change, spray_angle = \
-            update_powerups(powerups, player_obj, frame_count, time_change, spray_angle)
+        update_powerups(powerups, player_obj)
 
         make_lasers(lasers, difficulty)
 
-        draw_gui(timers, difficulty)
+        draw_gui(timers, difficulty, powerup_display)
 
         check_collisions(lasers, player_obj)
 
