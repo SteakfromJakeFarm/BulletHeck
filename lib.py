@@ -170,26 +170,28 @@ def update_powerups(powerups, player_obj):
                 player_obj.give_powerup(3)
                 powerups.remove(i)
         elif i.id == 4:
-            #
+            # No Collide
+            # Pink
             pygame.draw.rect(SCREEN, (255, 50, 150), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(4, 5)
                 powerups.remove(i)
         elif i.id == 5:
-            # Bomb powerup
+            # Big Bullets powerup
             # Black
             pygame.draw.rect(SCREEN, (0, 50, 100), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(5, 3)
                 powerups.remove(i)
         elif i.id == 6:
-            # Big Bullets powerup
+            # Bomb powerup
             # Brown
             pygame.draw.rect(SCREEN, (140, 90, 70), i.hitbox)
             if i.hitbox.colliderect(player_obj.hitbox):
                 player_obj.give_powerup(6, 4)
                 powerups.remove(i)
         elif i.id == 7:
+            # Tiny Man! powerup
             # Black background, red center
             pygame.draw.rect(SCREEN, (0, 0, 0), i.hitbox)
             pygame.draw.rect(SCREEN, (255, 50, 50), pygame.Rect(i.cord_x+4, i.cord_y+4, 7, 7))
@@ -198,7 +200,7 @@ def update_powerups(powerups, player_obj):
                 powerups.remove(i)
         elif i.id == 8:
             # Random powerup
-            # This draws a black question mark on a green background
+            # Black question mark on a green background
             pygame.draw.rect(SCREEN, (0, 255, 0), i.hitbox)
             pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 4, i.cord_y, 7, 2))
             pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 2, i.cord_y + 2, 2, 2))

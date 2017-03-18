@@ -1,4 +1,5 @@
 import pygame
+import Player
 from lib import *
 import time
 from config import *

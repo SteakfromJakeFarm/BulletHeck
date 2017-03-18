@@ -44,25 +44,41 @@ class Player:
     def movement(self):
         pressed = pygame.key.get_pressed()
         if (pressed[pygame.K_UP] or pressed[pygame.K_w]) and (pressed[pygame.K_DOWN] or pressed[pygame.K_s]):
-            self.cord_y += 1 * self.speed
+            pass
         elif (pressed[pygame.K_LEFT] or pressed[pygame.K_a]) and (pressed[pygame.K_RIGHT] or pressed[pygame.K_d]):
-            self.cord_x += 1 * self.speed
+            pass
         elif (pressed[pygame.K_UP] or pressed[pygame.K_w]) and (pressed[pygame.K_RIGHT] or pressed[pygame.K_d]):
             if self.cord_x < 590 and self.cord_y > 0:
                 self.cord_x += math.cos(math.pi/4) * self.speed
+                self.cord_y -= math.sin(math.pi/4) * self.speed
+            elif self.cord_x < 590:
+                self.cord_x += math.cos(math.pi/4) * self.speed
+            elif self.cord_y > 0:
                 self.cord_y -= math.sin(math.pi/4) * self.speed
         elif (pressed[pygame.K_UP] or pressed[pygame.K_w]) and (pressed[pygame.K_LEFT] or pressed[pygame.K_a]):
             if self.cord_x > 0 and self.cord_y > 0:
                 self.cord_x -= math.cos(math.pi/4) * self.speed
                 self.cord_y -= math.sin(math.pi/4) * self.speed
+            elif self.cord_x > 0:
+                self.cord_x -= math.sin(math.pi/4) * self.speed
+            elif self.cord_y > 0:
+                self.cord_y -= math.sin(math.pi/4) * self.speed
         elif (pressed[pygame.K_DOWN] or pressed[pygame.K_s]) and (pressed[pygame.K_RIGHT] or pressed[pygame.K_d]):
             if self.cord_x < 590 and self.cord_y < 590:
                 self.cord_x += math.cos(math.pi/4) * self.speed
+                self.cord_y += math.sin(math.pi/4) * self.speed
+            elif self.cord_x < 590:
+                self.cord_x += math.sin(math.pi/4) * self.speed
+            elif self.cord_y < 590:
                 self.cord_y += math.sin(math.pi/4) * self.speed
         elif (pressed[pygame.K_DOWN] or pressed[pygame.K_s]) and (pressed[pygame.K_LEFT] or pressed[pygame.K_a]):
             if self.cord_x > 0 and self.cord_y < 590:
                 self.cord_x -= math.cos(math.pi/4) * self.speed
                 self.cord_y += math.sin(math.pi/4) * self.speed
+            elif self.cord_x > 0:
+                self.cord_x -= math.sin(math.pi/4) * self.speed
+            elif self.cord_y < 590:
+                self.cord_y += math.sin(math.pi / 4) * self.speed
         elif pressed[pygame.K_UP] or pressed[pygame.K_w]:
             if self.cord_y > 0:
                 self.cord_y -= 1 * self.speed
@@ -139,28 +155,28 @@ class Player:
                         self.powerups_applied = []
                         label_text.append("Reset")
                     elif i[0] == 1:
+                        label_text.append("Ring " + str(int(math.ceil(i[2] + i[1] - time.time()))))
                         self.shoot_spray(360, Shot.Shot)
                         self.powerups_applied.remove(i)
-                        label_text.append("Ring")
                     elif i[0] == 2:
                         time_change = 1
-                        label_text.append("Slow Time")
+                        label_text.append("Slow Time " + str(int(math.ceil(i[2] + i[1] - time.time()))))
                     elif i[0] == 3:
                         self.spray(Shot.Shot)
-                        label_text.append("Spin Fire")
+                        label_text.append("Spin Fire " + str(int(math.ceil(i[2] + i[1] - time.time()))))
                     elif i[0] == 4:
                         self.collide = False
                         self.adjusted_color = (150, 150, 150)
-                        label_text.append("No Collide")
+                        label_text.append("No Collide " + str(int(math.ceil(i[2] + i[1] - time.time()))))
                     elif i[0] == 5:
                         self.shot_size = (20, 20)
-                        label_text.append("Big Bullets")
+                        label_text.append("Big Bullets " + str(int(math.ceil(i[2] + i[1] - time.time()))))
                     elif i[0] == 6:
                         self.drop_bomb()
-                        label_text.append("Bombs")
+                        label_text.append("Bombs " + str(int(math.ceil(i[2] + i[1] - time.time()))))
                     elif i[0] == 7:
                         self.size_x, self.size_y = (6, 6)
-                        label_text.append("Tiny Man!")
+                        label_text.append("Tiny Man! " + str(int(math.ceil(i[2] + i[1] - time.time()))))
                     elif i[0] == 8:
                         pass
         else:
@@ -205,6 +221,6 @@ class Player:
 
     def drop_bomb(self):
         if time.time() >= self.timers["bomb"] + self.cooldowns["bomb"]:
-            new_bomb = Bomb.Bomb(self.cord_x, self.cord_y, 5)
+            new_bomb = Bomb.Bomb(self.cord_x, self.cord_y)
             self.bombs.append(new_bomb)
             self.timers["bomb"] = time.time()
