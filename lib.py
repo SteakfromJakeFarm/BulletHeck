@@ -1,134 +1,349 @@
+# import pygame
 import random
-import pygame
-import math
+# import math
 import time
+import Laser
+# import Player
+import Shot
+import PowerUp
+from config import *
 
 
-class Laser:
-    def __init__(self, min_speed, multiplier):
-        self.side = random.randint(0, 3)
+def update_events_menu():
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:  # Happens when the user selects quit or closes with X
+            return False
+    return True
 
-        if self.side == 0:
-            self.cord_x = random.randint(0, 600)
-            self.cord_y = -20
-        elif self.side == 1:
-            self.cord_x = random.randint(0, 600)
-            self.cord_y = 620
-        elif self.side == 2:
-            self.cord_x = -20
-            self.cord_y = random.randint(0, 600)
+
+def update_keyboard_menu(menu_spot, last_toggle, debug_state, frame):
+    pressed = pygame.key.get_pressed()  # Make a list of every key that is being pressed down.
+
+    if frame == 1:  # Fixes bug in which pressed from last game can move the cursor to quit on first frame
+        pressed = []
+        for i in range(0, 300):
+            pressed.append(0)
+
+    if pressed[pygame.K_c] and time.time() >= last_toggle + TOGGLE_DEBUFFER:
+        # Toggles cheat mode. assuming enough time has passed
+        debug_state = not debug_state
+        last_toggle = time.time()
+
+    # This chain moves the cursor
+    if (pressed[pygame.K_UP] or pressed[pygame.K_w]) and (pressed[pygame.K_DOWN] or pressed[pygame.K_s]):
+        pass
+    elif (pressed[pygame.K_LEFT] or pressed[pygame.K_a]) and (pressed[pygame.K_RIGHT] or pressed[pygame.K_d]):
+        pass
+    elif (pressed[pygame.K_UP] or pressed[pygame.K_w]) and menu_spot > 0:
+        menu_spot -= 1
+    elif (pressed[pygame.K_DOWN] or pressed[pygame.K_s]) and menu_spot < 1:
+        menu_spot += 1
+    elif (pressed[pygame.K_LEFT] or pressed[pygame.K_a]) and menu_spot > 0:
+        menu_spot -= 1
+    elif (pressed[pygame.K_RIGHT] or pressed[pygame.K_d]) and menu_spot < 1:
+        menu_spot += 1
+
+    if pressed[pygame.K_RETURN]:  # What to do if the user finalized a selection
+        if menu_spot == 0:
+            menu_running = False
+            menu_quit = False
+        elif menu_spot == 1:
+            menu_running = False
+            menu_quit = True
         else:
-            self.cord_x = 620
-            self.cord_y = random.randint(0, 600)
+            menu_running = False
+            menu_quit = False
+            print("If you see this, please let the developer know!")
+            print("Error No: 2")
+    else:
+        menu_running = True
+        menu_quit = False
 
-        self.speed = random.random() * multiplier
-        if self.speed < min_speed:
-            self.speed = min_speed
-        self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)
-
-    def update(self):
-        if self.side == 0:
-            self.cord_y += 1 * self.speed
-        elif self.side == 1:
-            self.cord_y -= 1 * self.speed
-        elif self.side == 2:
-            self.cord_x += 1 * self.speed
-        elif self.side == 3:
-            self.cord_x -= 1 * self.speed
-        self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)
+    return menu_spot, last_toggle, debug_state, menu_running, menu_quit
 
 
-class Player:
-    def __init__(self, shot_cooldown, speed, shot_speed):
-        self.cord_x = 300
-        self.cord_y = 300
-        self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)
-        self.shots = []
-        self.shot_cooldown = shot_cooldown
-        self.shot_speed = shot_speed
-        self.last_shot_time = 0
-        self.speed = speed
-
-    def move_up(self):
-        if self.cord_y > 0:
-            self.cord_y -= 1 * self.speed
-
-    def move_down(self):
-        if self.cord_y < 590:
-            self.cord_y += 1 * self.speed
-
-    def move_right(self):
-        if self.cord_x < 590:
-            self.cord_x += 1 * self.speed
-
-    def move_left(self):
-        if self.cord_x > 0:
-            self.cord_x -= 1 * self.speed
-
-    def movement(self, key=''):
-        if key == pygame.K_UP:
-            self.move_up()
-        elif key == pygame.K_DOWN:
-            self.move_down()
-        elif key == pygame.K_RIGHT:
-            self.move_right()
-        elif key == pygame.K_LEFT:
-            self.move_left()
+def draw_gui_menu(menu_spot, debug_state, win, difficulty):
+    # This chain draws the text on the menu
+    if menu_spot == 0:
+        if win:
+            label_start = pygame.font.SysFont(FONT, FONT_SIZE).render("Continue  <--", 1, COLOR_START)
         else:
-            pass
+            label_start = pygame.font.SysFont(FONT, FONT_SIZE).render("New Game  <--", 1, COLOR_START)
+        label_quit = pygame.font.SysFont(FONT, FONT_SIZE).render("Quit", 1, COLOR_QUIT)
+    elif menu_spot == 1:
+        if win:
+            label_start = pygame.font.SysFont(FONT, FONT_SIZE).render("Continue", 1, COLOR_START)
+        else:
+            label_start = pygame.font.SysFont(FONT, FONT_SIZE).render("New Game", 1, COLOR_START)
+        label_quit = pygame.font.SysFont(FONT, FONT_SIZE).render("Quit  <--", 1, COLOR_QUIT)
+    else:
+        label_start = pygame.font.SysFont(FONT, FONT_SIZE).render("Go", 1, COLOR_START)
+        label_quit = pygame.font.SysFont(FONT, FONT_SIZE).render("Stop", 1, COLOR_QUIT)
+        print("If you see this, please let the developer know!")
+        print("Error No: 1")
 
-    def shoot(self, mouse_x, mouse_y):
-        if time.time() >= self.last_shot_time + self.shot_cooldown:
-            player_bullet = Shot(mouse_x, mouse_y, self.cord_x, self.cord_y, self.shot_speed)
-            self.shots.append(player_bullet)
-            self.last_shot_time = time.time()
+    if debug_state:
+        SCREEN.fill(DEBUG_COLOR_SCREEN)
+    else:
+        SCREEN.fill(COLOR_SCREEN)
+    SCREEN.blit(label_start, ((WINDOW_X / 2) - 50, (WINDOW_Y / 2 - 50)))
+    SCREEN.blit(label_quit, ((WINDOW_X / 2) - 50, (WINDOW_Y / 2)))
 
-    def update(self):
-        self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)
-
-    def shoot_angle(self, angle):
-        if time.time() >= self.last_shot_time + self.shot_cooldown:
-            player_bullet = SpinShot(angle, self.cord_x, self.cord_y, self.shot_speed)
-            self.shots.append(player_bullet)
-            self.last_shot_time = time.time()
-
-
-class Shot:
-    def __init__(self, mouse_x, mouse_y, player_x, player_y, speed):
-        self.cord_x = player_x
-        self.cord_y = player_y
-        self.mouse_x = mouse_x
-        self.mouse_y = mouse_y
-        self.hurtbox = pygame.Rect(self.cord_x, self.cord_y, 5, 5)
-        self.angle = 0
-        self.speed = speed
-        self.calc_angle()
-
-    def calc_angle(self):
-        try:
-            self.angle = math.atan2((self.mouse_y - self.cord_y), (self.mouse_x - self.cord_x))
-        except ZeroDivisionError:
-            self.angle = math.pi/2
-
-    def movement(self):
-        self.cord_y += math.sin(self.angle) * self.speed
-        self.cord_x += math.cos(self.angle) * self.speed
-
-    def update(self):
-        self.hurtbox = pygame.Rect(self.cord_x, self.cord_y, 5, 5)
+    # Display the current difficulty
+    level = pygame.font.SysFont(FONT, FONT_SIZE).render(str(difficulty), 1, COLOR_DIFFICULTY)
+    SCREEN.blit(level, (WINDOW_X - 50, 0))
 
 
-class SpinShot(Shot):
-    def __init__(self, angle, player_x, player_y, speed):
-        self.cord_x = player_x
-        self.cord_y = player_y
-        self.hurtbox = pygame.Rect(self.cord_x, self.cord_y, 5, 5)
-        self.angle = angle
-        self.speed = speed
+# Draw the lasers and remove ones that go off screen
+def update_lasers(lasers_list, time_change):
+    for laser in lasers_list:
+        laser.update(time_change)
+        r, g, b = (0, 10, 255)
+        b -= laser.speed*50
+        r += laser.speed*50
+        if b < 0:
+            b = 0
+        if r > 255:
+            r = 255
+        adjusted_color = (r, g, b)
+        if laser.cord_x > 620 and laser.side == 2:
+            lasers_list.remove(laser)
+        elif laser.cord_x < -20 and laser.side == 3:
+            lasers_list.remove(laser)
+        elif laser.cord_y > 620 and laser.side == 0:
+            lasers_list.remove(laser)
+        elif laser.cord_y < -20 and laser.side == 1:
+            lasers_list.remove(laser)
+        else:
+            pygame.draw.rect(SCREEN, adjusted_color, laser.hitbox, 0)
 
-    def movement(self):
-        self.cord_x += math.cos(self.angle) * self.speed
-        self.cord_y += math.sin(self.angle) * self.speed
 
-    def update(self):
-        self.hurtbox = pygame.Rect(self.cord_x, self.cord_y, 5, 5)
+# If the laser count is lower than we want, make more
+def make_lasers(laser_list, difficulty):
+    if len(laser_list) < (LASER_THRESHOLD * (difficulty/LASER_DIVIDE)) + LASER_ADD and LASER_RESPAWN:
+        laser_shot = Laser.Laser(difficulty)
+        laser_list.append(laser_shot)
+
+
+# Change the player's cords based on what keys are pressed and draw the player
+def update_player(player_obj, debug_state):
+    player_obj.movement()  # Change player's cords based on key pressed
+    time_change, label = player_obj.update()  # Remake hitbox and do powerup related things
+    player_obj.debug = debug_state  # Change the player's debug state
+    player_obj.refresh_debug()  # Update the player's properties to match the new debug_state
+
+    # Draw the player to the screen
+    pygame.draw.rect(SCREEN, player_obj.adjusted_color, player_obj.hitbox, 0)
+
+    # Makes a spinning illusion.
+
+    return time_change, label
+
+
+def spawn_powerups(chance, powerups):
+    if random.random() <= chance/FRAMERATE:  # This makes it so that the chance is per second
+        x = PowerUp.PowerUp(random.randint(1, 8))
+        powerups.append(x)
+
+
+def update_powerups(powerups, player_obj):
+    for i in powerups:
+        if i.id == 1:
+            # Ring powerup
+            # Light blue
+            pygame.draw.rect(SCREEN, (120, 120, 255), i.hitbox)
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(1)
+                powerups.remove(i)
+        elif i.id == 2:
+            # Slow time powerup
+            # Yellow
+            pygame.draw.rect(SCREEN, (200, 200, 10), i.hitbox)
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(2, 3)
+                powerups.remove(i)
+        elif i.id == 3:
+            # Spin spray powerup
+            # Teal
+            pygame.draw.rect(SCREEN, (10, 200, 100), i.hitbox)
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(3)
+                powerups.remove(i)
+        elif i.id == 4:
+            #
+            pygame.draw.rect(SCREEN, (255, 50, 150), i.hitbox)
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(4, 5)
+                powerups.remove(i)
+        elif i.id == 5:
+            # Bomb powerup
+            # Black
+            pygame.draw.rect(SCREEN, (0, 50, 100), i.hitbox)
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(5, 3)
+                powerups.remove(i)
+        elif i.id == 6:
+            # Big Bullets powerup
+            # Brown
+            pygame.draw.rect(SCREEN, (140, 90, 70), i.hitbox)
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(6, 4)
+                powerups.remove(i)
+        elif i.id == 7:
+            # Black background, red center
+            pygame.draw.rect(SCREEN, (0, 0, 0), i.hitbox)
+            pygame.draw.rect(SCREEN, (255, 50, 50), pygame.Rect(i.cord_x+4, i.cord_y+4, 7, 7))
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(7, 3)
+                powerups.remove(i)
+        elif i.id == 8:
+            # Random powerup
+            # This draws a black question mark on a green background
+            pygame.draw.rect(SCREEN, (0, 255, 0), i.hitbox)
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 4, i.cord_y, 7, 2))
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 2, i.cord_y + 2, 2, 2))
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 11, i.cord_y + 2, 2, 6))
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 5, i.cord_y + 8, 6, 2))
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 5, i.cord_y + 10, 2, 2))
+            pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 5, i.cord_y + 13, 2, 2))
+            if i.hitbox.colliderect(player_obj.hitbox):
+                player_obj.give_powerup(random.randint(1, 7))
+                powerups.remove(i)
+
+
+# Draw the player's bullets and update their movement. Bullets that go off screen are removed
+def update_shots(shots_list):
+    for shot in shots_list:
+        shot.movement()
+        shot.update()
+        if shot.cord_x > WINDOW_X + shot.size_x:
+            shots_list.remove(shot)
+        elif shot.cord_x < 0 - shot.size_x:
+            shots_list.remove(shot)
+        elif shot.cord_y > WINDOW_Y + shot.size_y:
+            shots_list.remove(shot)
+        elif shot.cord_y < 0 - shot.size_y:
+            shots_list.remove(shot)
+        else:
+            pygame.draw.circle(SCREEN, COLOR_SHOT, (int(shot.cord_x), int(shot.cord_y)), SHOT_RADIUS, 0)
+
+
+def check_collisions(lasers, player_obj):
+    # check for collisions with player or player's lasers
+    for laser in lasers:
+        if player_obj.hitbox.colliderect(laser.hitbox) and player_obj.collide:
+            # If player has hit a laser, post a 'hit' event
+            pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"event": "hit"}))
+        for shot in player_obj.shots:
+            if shot.hurtbox.colliderect(laser.hitbox):  # If a player bullet has hit a laser, destroy both
+                try:
+                    lasers.remove(laser)
+                    player_obj.shots.remove(shot)
+                except ValueError:  # This happens when we try to delete something that doesnt exist
+                    pass
+
+
+def draw_gui(timers, difficulty, powerup_text):
+    timer = pygame.font.SysFont(FONT, FONT_SIZE).render(str(int(time.time() - timers['time_start'])), 1, COLOR_TIMER)
+    SCREEN.blit(timer, (0, 0))
+
+    level = pygame.font.SysFont(FONT, FONT_SIZE).render(str(difficulty), 1, COLOR_DIFFICULTY)
+    SCREEN.blit(level, (WINDOW_X - 50, 0))
+
+    powerup_display = pygame.font.SysFont(FONT, FONT_SIZE).render(powerup_text, 1, COLOR_OTHERS)
+    SCREEN.blit(powerup_display, (((WINDOW_X-(len(powerup_text)*FONT_SIZE/2))/2), WINDOW_Y * 7/8))
+
+
+def update_events(game_running, game_quit, game_state, lasers):
+    pygame.event.pump()  # pygame wants me to do this. Please make them stop
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            game_running = False
+            game_quit = True
+
+        elif event.type == pygame.USEREVENT:
+            if event.event == 'hit':  # If the player gets hit, he dies
+                SCREEN.fill(COLOR_SCREEN)
+                label = pygame.font.SysFont(FONT, FONT_SIZE).render("ded", 1, COLOR_DED)
+                SCREEN.blit(label, (300, 300))
+                pygame.display.flip()
+
+                time.sleep(1)  # Allow time for player to understand what he did wrong.
+
+                for laser in lasers:  # Probably redundant. Better safe than sorry for now...
+                    lasers.remove(laser)
+
+                game_running = False
+                game_state = 'lose'
+
+            elif event.event == 'win':
+                SCREEN.fill(COLOR_SCREEN)
+                label = pygame.font.SysFont(FONT, FONT_SIZE).render("Win!", 1, COLOR_WIN)
+                SCREEN.blit(label, (300, 300))
+                pygame.display.flip()
+
+                time.sleep(0.5)  # Allow only enough time for player to know that they aren't dead yet
+
+                for laser in lasers:  # Probably redundant. Better safe than sorry for now...
+                    lasers.remove(laser)
+
+                game_running = False
+                game_state = 'win'
+    return game_running, game_state, game_quit
+
+
+def update_keyboard(debug_state, timers, spray_toggle, player_obj, time_change):
+    pressed = pygame.key.get_pressed()  # Make a list of every key that is being pressed down.
+
+    if pressed[pygame.K_c] and time.time() >= timers['last_debug_toggle'] + 0.3:
+        debug_state = not debug_state
+        player_obj.debug = debug_state
+        player_obj.refresh_debug()
+        timers['last_debug_toggle'] = time.time()
+
+    if pressed[pygame.K_v] and time.time() >= timers['last_time_change'] + 0.3:
+        if time_change == 0:
+            time_change = 1
+        elif time_change == 1:
+            time_change = 2
+        elif time_change == 2:
+            time_change = 0
+        else:
+            print("If you see this, let the developer know!")
+            print("Error No. 5")
+        timers['last_time_change'] = time.time()
+
+    # Another fun easter egg.
+    if pressed[pygame.K_r] and debug_state and (time.time() >= timers['last_spray_toggle'] + DEBUG_SPRAY_DEBUFFER):
+        player_obj.give_powerup(3)
+        timers['last_spray_toggle'] = time.time()
+    return debug_state, timers, spray_toggle, time_change
+
+
+def update_mouse(player_obj):
+    mouse_pressed = pygame.mouse.get_pressed()  # List of all mouse buttons pressed
+
+    if mouse_pressed[0]:
+        x, y = pygame.mouse.get_pos()
+        player_obj.shoot(x, y, Shot.Shot)
+    if mouse_pressed[2]:
+        x, y = pygame.mouse.get_pos()
+        player_obj.shoot_burst(x, y, Shot.Shot)
+
+
+def check_time(debug_state, timers):
+    # This determines the time passed.
+    if debug_state:
+        time_reached = time.time() >= timers['time_start'] + DEBUG_TIME_LIMIT
+    else:
+        time_reached = time.time() >= timers['time_start'] + TIME_LIMIT
+        # Once the player has survived the required time, he wins the level
+    if time_reached:
+        pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"event": "win"}))
+    return time_reached
+
+
+def update_bombs(player_obj):
+    for bomb in player_obj.bombs:
+        bomb.tick(player_obj)
+        pygame.draw.rect(SCREEN, bomb.color, bomb.hitbox)

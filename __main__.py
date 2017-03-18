@@ -1,10 +1,11 @@
 import game
+import math
 
-real_running = True
+running = True
 i = 1
 win = False
-while real_running:
-    menu_quit, debug = game.main_menu(win, i)
+while running:
+    menu_quit, debug = game.main_menu(i, win)
 
     if menu_quit:
         break
@@ -19,6 +20,9 @@ while real_running:
         i += 1
     elif game_result == "lose":
         win = False
-        i = 1
+        i = int(math.floor(i-(i % 5)))  # This creates a checkpoint every 5 levels
+        if i <= 0:  # safety first
+            i = 1
+        print(i)
     elif not game_result:
         break
