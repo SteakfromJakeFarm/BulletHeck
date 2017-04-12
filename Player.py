@@ -43,11 +43,34 @@ class Player:
 
     def movement(self):
         pressed = pygame.key.get_pressed()
-        if (pressed[pygame.K_UP] or pressed[pygame.K_w]) and (pressed[pygame.K_DOWN] or pressed[pygame.K_s]):
+        '''
+        There is an issue here. If your keyboard doesn't have high enough key-rollover,
+        pressing multiple direction keys can cause unexpected results. I'm not sure if there
+        is a fix for this... I'll look into it.
+        '''
+        up = ((pressed[pygame.K_UP] == 1) or (pressed[pygame.K_w] == 1))
+        down = ((pressed[pygame.K_DOWN] == 1) or (pressed[pygame.K_s] == 1))
+        right = ((pressed[pygame.K_RIGHT] == 1) or (pressed[pygame.K_d] == 1))
+        left = ((pressed[pygame.K_LEFT] == 1) or (pressed[pygame.K_a] == 1))
+        if up and down and right and left:
             pass
-        elif (pressed[pygame.K_LEFT] or pressed[pygame.K_a]) and (pressed[pygame.K_RIGHT] or pressed[pygame.K_d]):
+        elif up and down and right:
+            if self.cord_x < 590:
+                self.cord_x += 1 * self.speed
+        elif up and down and left:
+            if self.cord_x > 0:
+                self.cord_x -= 1 * self.speed
+        elif left and right and up:
+            if self.cord_y > 0:
+                self.cord_y -= 1 * self.speed
+        elif left and right and down:
+            if self.cord_y < 590:
+                self.cord_y += 1 * self.speed
+        elif up and down:
+                pass
+        elif left and right:
             pass
-        elif (pressed[pygame.K_UP] or pressed[pygame.K_w]) and (pressed[pygame.K_RIGHT] or pressed[pygame.K_d]):
+        elif up and right:
             if self.cord_x < 590 and self.cord_y > 0:
                 self.cord_x += math.cos(math.pi/4) * self.speed
                 self.cord_y -= math.sin(math.pi/4) * self.speed
@@ -55,7 +78,7 @@ class Player:
                 self.cord_x += math.cos(math.pi/4) * self.speed
             elif self.cord_y > 0:
                 self.cord_y -= math.sin(math.pi/4) * self.speed
-        elif (pressed[pygame.K_UP] or pressed[pygame.K_w]) and (pressed[pygame.K_LEFT] or pressed[pygame.K_a]):
+        elif up and left:
             if self.cord_x > 0 and self.cord_y > 0:
                 self.cord_x -= math.cos(math.pi/4) * self.speed
                 self.cord_y -= math.sin(math.pi/4) * self.speed
@@ -63,7 +86,7 @@ class Player:
                 self.cord_x -= math.sin(math.pi/4) * self.speed
             elif self.cord_y > 0:
                 self.cord_y -= math.sin(math.pi/4) * self.speed
-        elif (pressed[pygame.K_DOWN] or pressed[pygame.K_s]) and (pressed[pygame.K_RIGHT] or pressed[pygame.K_d]):
+        elif down and right:
             if self.cord_x < 590 and self.cord_y < 590:
                 self.cord_x += math.cos(math.pi/4) * self.speed
                 self.cord_y += math.sin(math.pi/4) * self.speed
@@ -71,7 +94,7 @@ class Player:
                 self.cord_x += math.sin(math.pi/4) * self.speed
             elif self.cord_y < 590:
                 self.cord_y += math.sin(math.pi/4) * self.speed
-        elif (pressed[pygame.K_DOWN] or pressed[pygame.K_s]) and (pressed[pygame.K_LEFT] or pressed[pygame.K_a]):
+        elif down and left:
             if self.cord_x > 0 and self.cord_y < 590:
                 self.cord_x -= math.cos(math.pi/4) * self.speed
                 self.cord_y += math.sin(math.pi/4) * self.speed
@@ -79,16 +102,16 @@ class Player:
                 self.cord_x -= math.sin(math.pi/4) * self.speed
             elif self.cord_y < 590:
                 self.cord_y += math.sin(math.pi / 4) * self.speed
-        elif pressed[pygame.K_UP] or pressed[pygame.K_w]:
+        elif up:
             if self.cord_y > 0:
                 self.cord_y -= 1 * self.speed
-        elif pressed[pygame.K_DOWN] or pressed[pygame.K_s]:
+        elif down:
             if self.cord_y < 590:
                 self.cord_y += 1 * self.speed
-        elif pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
+        elif right:
             if self.cord_x < 590:
                 self.cord_x += 1 * self.speed
-        elif pressed[pygame.K_LEFT] or pressed[pygame.K_a]:
+        elif left:
             if self.cord_x > 0:
                 self.cord_x -= 1 * self.speed
         else:
@@ -96,7 +119,7 @@ class Player:
 
     def shoot(self, mouse_x, mouse_y, shot):
         if time.time() >= self.timers["shot"] + self.cooldowns["shot"]:
-            player_bullet = shot(mx=mouse_x, my=mouse_y, px=self.cord_x, py=self.cord_y,
+            player_bullet = shot(self.shots, mx=mouse_x, my=mouse_y, px=self.cord_x, py=self.cord_y,
                                  speed=self.shot_speed, size=self.shot_size)
             self.shots.append(player_bullet)
             self.timers["shot"] = time.time()
@@ -106,27 +129,29 @@ class Player:
         j = 0.0
         for i in range(0, parts, 1):
             j += math.pi / math.radians(parts)
-            player_bullet = shot(angle=j, speed=self.shot_speed, px=self.cord_x, py=self.cord_y, size=self.shot_size)
+            player_bullet = shot(self.shots, angle=j, speed=self.shot_speed, px=self.cord_x, py=self.cord_y,
+                                 size=self.shot_size)
             self.shots.append(player_bullet)
 
     def shoot_angle(self, angle, shot):
-        player_bullet = shot(angle=angle, px=self.cord_x, py=self.cord_y, speed=self.shot_speed, size=self.shot_size)
+        player_bullet = shot(self.shots, angle=angle, px=self.cord_x, py=self.cord_y,
+                             speed=self.shot_speed, size=self.shot_size)
         self.shots.append(player_bullet)
 
     def shoot_burst(self, mx, my, shot):
         if time.time() >= self.timers["burst"] + self.cooldowns["burst"]:
             angle = math.atan2((my - self.cord_y), (mx - self.cord_x))
-            player_bullet = shot(angle=angle, px=self.cord_x, py=self.cord_y,
+            player_bullet = shot(self.shots, angle=angle, px=self.cord_x, py=self.cord_y,
                                  speed=self.shot_speed, size=self.shot_size)
             self.shots.append(player_bullet)
             for i in range(1, 3, 1):  # TODO
                 angle = math.atan2((my - self.cord_y), (mx - self.cord_x)) + math.radians(i*5)
-                player_bullet = shot(angle=angle, px=self.cord_x, py=self.cord_y,
+                player_bullet = shot(self.shots, angle=angle, px=self.cord_x, py=self.cord_y,
                                      speed=self.shot_speed, size=self.shot_size)
                 self.shots.append(player_bullet)
             for i in range(1, 3, 1):
                 angle = math.atan2((my - self.cord_y), (mx - self.cord_x)) - math.radians(i*5)
-                player_bullet = shot(angle=angle, px=self.cord_x, py=self.cord_y,
+                player_bullet = shot(self.shots, angle=angle, px=self.cord_x, py=self.cord_y,
                                      speed=self.shot_speed, size=self.shot_size)
                 self.shots.append(player_bullet)
             self.timers["burst"] = time.time()

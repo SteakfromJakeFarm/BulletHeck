@@ -4,7 +4,7 @@ import math
 
 
 class Shot:
-    def __init__(self, angle=False, mx=0, my=0, px=0, py=0, speed=1, size=(5, 5), distance=-1, shot_list=True):
+    def __init__(self, shot_list, angle=False, mx=0, my=0, px=0, py=0, speed=3, size=(5, 5), distance=-1):
         self.cord_x = px
         self.cord_y = py
         self.init_cord_x = px

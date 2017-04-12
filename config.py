@@ -9,18 +9,19 @@ WINDOW_Y = 600  # Length of the game window in pixels
 # len(laser_list) < (LASER_THRESHOLD * (difficulty/LASER_DIVIDE)) + LASER_ADD
 # Tricky math. Handles spawning of lasers each round. After LASER_DIVIDE number of rounds, there will
 # be LASER_THRESHOLD + LASER_ADD amount of lasers. LASER_ADD is to offset the low amount of lasers in early rounds.
-LASER_THRESHOLD = 100
-LASER_DIVIDE = 30.0
-LASER_ADD = 8
+LASER_START = 15
+LASER_ADD = 5
+LASER_SPEED_START = 3
+LASER_SPEED_ADD = 0.5
 
-LASER_MIN_SPEED = 1  # The lowest speed that a laser should ever go
+LASER_MIN_SPEED = 1.5  # The lowest speed that a laser should ever go
 LASER_MULTIPLIER = 3  # Turns the random decimal of 0-1 to a larger, more usable number
 LASER_RESPAWN = True  # Should the lasers respawn once they move off screen?
 
 TIME_LIMIT = 20  # How long do you need to survive before you can pass to the next level?
 PLAYER_COLLIDE = True  # Should the player be hit by lasers?
 PLAYER_SHOOT_COOLDOWN = 0.50  # Time between the player's shots
-PLAYER_SHOT_SPEED = 2.5  # Multiplier of the player's shots' speed
+PLAYER_SHOT_SPEED = 4  # Multiplier of the player's shots' speed
 PLAYER_SPEED = 2  # Multiplier of the player's speed
 FONT = "Comic Sans MS"  # Font to be used in every menu
 COLOR_START = (10, 10, 200)  # Color of the "Start" option in the main menu
@@ -34,14 +35,17 @@ COLOR_DED = (0, 0, 255)  # Color of the message on the lose screen
 COLOR_WIN = (0, 200, 0)  # Color of the message on the win screen
 COLOR_SHOT = (255, 0, 0)  # Color of the player's bullets
 COLOR_DIFFICULTY = (100, 50, 170)  # Color of the difficulty counter
-COLOR_OTHERS = (0, 0, 0)
+COLOR_OTHERS = (0, 0, 0)  # Accent color
 FONT_SIZE = 20  # Size of the font of every piece of text
 TOGGLE_DEBUFFER = 0.2  # Time between toggling cheat mode
 SPEED_SLOW = 0.25  # Speed multiplier of the slowdown powerup
 SPEED_FAST = 2.0  # Speed multiplier of the speedup powerup
 POWERUP_CHANCE = 0.15  # Chance that a powerup will spawn any given second. 0-1
-SHOT_RADIUS = 4
+SHOT_RADIUS = 4  # Radius to draw the player's shots.
 POWERUPS = 8  # Number of unique powerup types
+SCORE_THRESHOLD = 10
+SCORE_MULTIPLIER = 0.25  #
+
 
 DEBUG_TIME_LIMIT = 99  # Longer for easier debugging
 DEBUG_PLAYER_COLLIDE = False  # Invincibility for easier debugging

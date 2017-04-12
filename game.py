@@ -35,9 +35,8 @@ def main_menu(difficulty, win):  # Draws the main menu. Once the user select an 
 
 
 # This function is the actual game loop. It changes based on the difficulty and is debug mode is on
-def game(difficulty, debug_state=False):
+def game(difficulty, score, debug_state=False):
     lasers = []  # List of all the lasers
-    bombs = []
     game_quit = False  # Does the user want to quit?
     game_running = True  # Is the game running?
     game_state = ''
@@ -51,6 +50,8 @@ def game(difficulty, debug_state=False):
     }
     time_change = 0
     powerups = []
+    # score = score
+    score_thresh = int(SCORE_THRESHOLD + (difficulty * SCORE_MULTIPLIER * SCORE_THRESHOLD))
 
     pygame.event.clear()  # Good for the environment
 
@@ -64,7 +65,7 @@ def game(difficulty, debug_state=False):
         CLOCK.tick(FRAMERATE)
         SCREEN.fill(COLOR_SCREEN)
 
-        check_time(debug_state, timers)
+        check_time(debug_state, timers, score, score_thresh)
 
         update_mouse(player_obj)
 
@@ -85,14 +86,16 @@ def game(difficulty, debug_state=False):
 
         update_lasers(lasers, time_change)
 
-        update_powerups(powerups, player_obj)
+        update_powerups(powerups, player_obj)  # Draw powerups
 
-        make_lasers(lasers, difficulty)
+        make_lasers(lasers, difficulty)  # If lasers despawn, make more to replace them
 
-        draw_gui(timers, difficulty, powerup_display)
+        draw_gui(timers, difficulty, powerup_display, score, score_thresh)  # Show the powerups being used, the level, time, etc.
 
-        check_collisions(lasers, player_obj)
+        score += check_collisions(lasers, player_obj)  # Do things touch other things?
+
+        if score >= score_thresh:
+            score = score_thresh
 
         pygame.display.flip()  # This is required by pygame to render the screen.
-
     return game_state, game_quit
