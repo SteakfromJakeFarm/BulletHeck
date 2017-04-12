@@ -1,6 +1,6 @@
 import pygame
 
-VERSION = '0.4'
+VERSION = '0.5'
 FRAMERATE = 60  # Times per second that the loop runs
 WINDOW_X = 600  # Width of the game window in pixels
 WINDOW_Y = 600  # Length of the game window in pixels
