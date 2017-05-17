@@ -1,5 +1,6 @@
 import pygame
 import Player
+import Boss
 from lib import *
 import time
 from config import *
@@ -55,9 +56,14 @@ def game(difficulty, score, debug_state=False):
 
     pygame.event.clear()  # Good for the environment
 
-    player_obj = Player.Player(300, 300, [], [])
+    player_obj = Player.Player(WINDOW_X/2, WINDOW_Y/2, [], [])
     player_obj.debug = debug_state
     player_obj.refresh_debug()
+
+    if difficulty % 5 == 0:
+        boss_obj = Boss.Boss(score_thresh)
+    else:
+        boss_obj = False
 
     while game_running:
         frame_count += 1
@@ -65,7 +71,18 @@ def game(difficulty, score, debug_state=False):
         CLOCK.tick(FRAMERATE)
         SCREEN.fill(COLOR_SCREEN)
 
-        check_time(debug_state, timers, score, score_thresh)
+        if difficulty % 5 == 0:
+            update_shots(boss_obj.shots, time_change)
+            update_boss(boss_obj, player_obj, time_change)
+            score = boss_obj.health
+            check_collisions(lasers, player_obj, difficulty, boss_obj)  # Do things touch other things?
+        else:
+            update_lasers(lasers, time_change)
+            make_lasers(lasers, difficulty)  # If lasers despawn, make more to replace them
+            check_time(debug_state, timers, score, score_thresh)
+            score += check_collisions(lasers, player_obj, difficulty, boss_obj)  # Do things touch other things?
+            if score >= score_thresh:
+                score = score_thresh
 
         update_mouse(player_obj)
 
@@ -77,25 +94,16 @@ def game(difficulty, score, debug_state=False):
 
         update_bombs(player_obj)
 
-        update_shots(player_obj.shots)
+        update_shots(player_obj.shots, time_change)
 
         time_change, powerup_display = \
             update_player(player_obj, debug_state)
 
         spawn_powerups(POWERUP_CHANCE, powerups)  # Chance that a powerup will spawn on any given second
 
-        update_lasers(lasers, time_change)
-
         update_powerups(powerups, player_obj)  # Draw powerups
 
-        make_lasers(lasers, difficulty)  # If lasers despawn, make more to replace them
-
         draw_gui(timers, difficulty, powerup_display, score, score_thresh)  # Show the powerups being used, the level, time, etc.
-
-        score += check_collisions(lasers, player_obj)  # Do things touch other things?
-
-        if score >= score_thresh:
-            score = score_thresh
 
         pygame.display.flip()  # This is required by pygame to render the screen.
     return game_state, game_quit

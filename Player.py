@@ -36,6 +36,7 @@ class Player:
             self.speed = PLAYER_SPEED
             self.collide = True
         else:
+            self.adjusted_color = DEBUG_COLOR_PLAYER
             self.cooldowns["shot"] = DEBUG_PLAYER_SHOOT_COOLDOWN
             self.shot_speed = DEBUG_PLAYER_SHOT_SPEED
             self.speed = DEBUG_PLAYER_SPEED
@@ -106,10 +107,10 @@ class Player:
             if self.cord_y > 0:
                 self.cord_y -= 1 * self.speed
         elif down:
-            if self.cord_y < 590:
+            if self.cord_y < WINDOW_Y-self.size_y:
                 self.cord_y += 1 * self.speed
         elif right:
-            if self.cord_x < 590:
+            if self.cord_x < WINDOW_X-self.size_x:
                 self.cord_x += 1 * self.speed
         elif left:
             if self.cord_x > 0:
@@ -226,6 +227,7 @@ class Player:
             self.shot_speed = PLAYER_SHOT_SPEED
             self.speed = PLAYER_SPEED
         else:
+            self.adjusted_color = DEBUG_COLOR_PLAYER
             self.cooldowns["shot"] = DEBUG_PLAYER_SHOOT_COOLDOWN
             self.shot_speed = DEBUG_PLAYER_SHOT_SPEED
             self.speed = DEBUG_PLAYER_SPEED

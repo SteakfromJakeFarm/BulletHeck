@@ -15,8 +15,7 @@ while running:
     if menu_quit:
         break
 
-    game_result, game_quit = game.game(i, debug)
-
+    game_result, game_quit = game.game(i, score, debug)
     if game_quit:
         break
 
@@ -25,7 +24,13 @@ while running:
         i += 1
     elif game_result == "time" or game_result == "hit":
         win = False
-        i = int(math.floor(i-(i % 5)))  # This creates a checkpoint every 5 levels
+
+        # This checkpoints every five levels.
+        # If you lose on 7, you go to 6. If you lose on 3, you go to 1, etc.
+        if i % 5 == 0:
+            i -= 4
+        else:
+            i = int(math.floor(i-(i % 5)))+1
         if i <= 0:  # safety first
             i = 1
     elif not game_result:

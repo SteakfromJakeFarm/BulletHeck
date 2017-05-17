@@ -1,11 +1,12 @@
-# import pygame
+import pygame
 import random
-# import math
+import math
 import time
 import Laser
-# import Player
+import Player
 import Shot
 import PowerUp
+import Boss
 from config import *
 
 
@@ -110,11 +111,11 @@ def update_lasers(lasers_list, time_change):
         if r > 255:
             r = 255
         adjusted_color = (r, g, b)
-        if laser.cord_x > 620 and laser.side == 2:
+        if laser.cord_x > WINDOW_X + 20 and laser.side == 2:
             lasers_list.remove(laser)
         elif laser.cord_x < -20 and laser.side == 3:
             lasers_list.remove(laser)
-        elif laser.cord_y > 620 and laser.side == 0:
+        elif laser.cord_y > WINDOW_X + 20 and laser.side == 0:
             lasers_list.remove(laser)
         elif laser.cord_y < -20 and laser.side == 1:
             lasers_list.remove(laser)
@@ -218,9 +219,12 @@ def update_powerups(powerups, player_obj):
 
 
 # Draw the player's bullets and update their movement. Bullets that go off screen are removed
-def update_shots(shots_list):
+def update_shots(shots_list, time_state):
     for shot in shots_list:
-        shot.movement()
+        if shot.owner == 'player':
+            shot.movement(0)  # Player's shots aren't affected by time powerups
+        else:
+            shot.movement(time_state)
         shot.update()
         if shot.cord_x > WINDOW_X + shot.size_x:
             shots_list.remove(shot)
@@ -231,10 +235,10 @@ def update_shots(shots_list):
         elif shot.cord_y < 0 - shot.size_y:
             shots_list.remove(shot)
         else:
-            pygame.draw.circle(SCREEN, COLOR_SHOT, (int(shot.cord_x), int(shot.cord_y)), SHOT_RADIUS, 0)
+            pygame.draw.circle(SCREEN, shot.color, (int(shot.cord_x), int(shot.cord_y)), SHOT_RADIUS, 0)
 
 
-def check_collisions(lasers, player_obj):
+def check_collisions(lasers, player_obj, difficulty, boss_obj=False):
     score = 0
     # check for collisions with player or player's lasers
     for laser in lasers:
@@ -249,6 +253,26 @@ def check_collisions(lasers, player_obj):
                     score += 1
                 except ValueError:  # This happens when we try to delete something that doesnt exist
                     pass
+    if boss_obj:
+        if difficulty % 5 == 0:
+            for shot in player_obj.shots:
+                if shot.hurtbox.colliderect(boss_obj.hitbox):
+                    try:
+                        for powerup in player_obj.powerups_applied:
+                            if powerup[0] == 5:  # Big bullets do more damage
+                                boss_obj.hurt(5)
+                        boss_obj.hurt(1)
+                        player_obj.shots.remove(shot)
+                        score += 1
+                    except ValueError:  # This happens when we try to delete something that doesnt exist
+                        pass
+            for shot in boss_obj.shots:
+                if shot.hurtbox.colliderect(player_obj.hitbox) and player_obj.collide:
+                    pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"event": "hit"}))
+            if boss_obj.health <= 0:
+                pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"event": "win"}))
+            if boss_obj.hitbox.colliderect(player_obj.hitbox) and player_obj.collide:
+                pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"event": "hit"}))
     return score
 
 
@@ -262,7 +286,10 @@ def draw_gui(timers, difficulty, powerup_text, score, score_thresh):
     powerup_display = pygame.font.SysFont(FONT, FONT_SIZE).render(powerup_text, 1, COLOR_OTHERS)
     SCREEN.blit(powerup_display, (((WINDOW_X-(len(powerup_text)*FONT_SIZE/2))/2), WINDOW_Y * 7/8))
 
-    score_display = pygame.font.SysFont(FONT, FONT_SIZE).render(str(score_thresh - score), 1, COLOR_OTHERS)
+    if difficulty % 5 == 0:
+        score_display = pygame.font.SysFont(FONT, FONT_SIZE).render(str(score), 1, COLOR_OTHERS)
+    else:
+        score_display = pygame.font.SysFont(FONT, FONT_SIZE).render(str(score_thresh - score), 1, COLOR_OTHERS)
     SCREEN.blit(score_display, (((WINDOW_X - (len(str(score)*FONT_SIZE)/2))/2), WINDOW_Y * 1 / 128))
 
 
@@ -277,7 +304,7 @@ def update_events(game_running, game_quit, game_state, lasers):
             if event.event == 'hit':  # If the player gets hit, he dies
                 SCREEN.fill(COLOR_SCREEN)
                 label = pygame.font.SysFont(FONT, FONT_SIZE).render("ded", 1, COLOR_DED)
-                SCREEN.blit(label, (300, 300))
+                SCREEN.blit(label, (WINDOW_X/2, WINDOW_Y/2))
                 pygame.display.flip()
 
                 time.sleep(1)  # Allow time for player to understand what he did wrong.
@@ -291,7 +318,7 @@ def update_events(game_running, game_quit, game_state, lasers):
             elif event.event == 'time':  # If the player runs out of time, he loses
                 SCREEN.fill(COLOR_SCREEN)
                 label = pygame.font.SysFont(FONT, FONT_SIZE).render("time's up", 1, COLOR_DED)
-                SCREEN.blit(label, (300, 300))
+                SCREEN.blit(label, (WINDOW_X/2, WINDOW_Y/2))
                 pygame.display.flip()
 
                 time.sleep(1)
@@ -302,7 +329,7 @@ def update_events(game_running, game_quit, game_state, lasers):
             elif event.event == 'win':
                 SCREEN.fill(COLOR_SCREEN)
                 label = pygame.font.SysFont(FONT, FONT_SIZE).render("Win!", 1, COLOR_WIN)
-                SCREEN.blit(label, (300, 300))
+                SCREEN.blit(label, (WINDOW_X/2, WINDOW_Y/2))
                 pygame.display.flip()
 
                 time.sleep(0.5)  # Allow only enough time for player to know that they aren't dead yet
@@ -385,3 +412,8 @@ def centered_label(axis='both', text='', color=COLOR_OTHERS, x=0, y=0):
     elif axis == 'both':
         pass
     SCREEN.blit(label, (x, y))
+
+
+def update_boss(boss, player_obj, time_state):
+    boss.update(player_obj, time_state)
+

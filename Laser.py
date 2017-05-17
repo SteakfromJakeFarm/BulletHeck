@@ -1,28 +1,32 @@
 import pygame
 import random
+import math
 from config import *
 
 
 class Laser:
     def __init__(self, difficulty):
         self.side = random.randint(0, 3)
-        self.min_speed = LASER_SPEED_START
-        self.speed = random.random() * (difficulty * LASER_SPEED_ADD + LASER_SPEED_START)
+        min_speed = LASER_SPEED_START
+        max_speed = random.random() + (difficulty * LASER_SPEED_ADD)
+        self.speed = random.uniform(min_speed, max_speed)
+        if self.speed < min_speed:
+            self.speed = min_speed
         if self.speed < LASER_MIN_SPEED:
             self.speed = LASER_MIN_SPEED
 
         if self.side == 0:
-            self.cord_x = random.randint(0, 600)
-            self.cord_y = random.randint(-40, -10)
+            self.cord_x = random.randint(0, WINDOW_X)
+            self.cord_y = random.randint(-100, -10)
         elif self.side == 1:
-            self.cord_x = random.randint(0, 600)
-            self.cord_y = random.randint(600, 640)
+            self.cord_x = random.randint(0, WINDOW_X)
+            self.cord_y = random.randint(WINDOW_Y, WINDOW_Y + 100)
         elif self.side == 2:
-            self.cord_x = random.randint(-40, -10)
-            self.cord_y = random.randint(0, 600)
+            self.cord_x = random.randint(-100, -10)
+            self.cord_y = random.randint(0, WINDOW_Y)
         else:
-            self.cord_x = random.randint(600, 640)
-            self.cord_y = random.randint(0, 600)
+            self.cord_x = random.randint(WINDOW_X, WINDOW_X + 100)
+            self.cord_y = random.randint(0, WINDOW_Y)
 
         self.hitbox = pygame.Rect(self.cord_x, self.cord_y, 10, 10)
 
