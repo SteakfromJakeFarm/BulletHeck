@@ -7,7 +7,7 @@ from config import *
 
 
 class Boss:
-    def __init__(self, health):
+    def __init__(self, health, firerate):
         self.size_x = 60
         self.size_y = 60
         self.cord_x = (WINDOW_X / 2) - (self.size_x/2)
@@ -15,6 +15,7 @@ class Boss:
         self.speed = 3
         self.color = COLOR_BOSS
         self.health = health
+        self.firerate = firerate
         self.shots = []
         self.timers = {
             "movement": time.time(),
@@ -53,7 +54,7 @@ class Boss:
         self.shots.append(shot)
 
     def update(self, player_obj, time_state):
-        if random.random() <= 3.0/FRAMERATE:
+        if random.random() <= self.firerate:
             self.shoot(player_obj)
         self.movement(time_state)
         self.hitbox = pygame.Rect(self.cord_x, self.cord_y, self.size_x, self.size_y)

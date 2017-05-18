@@ -12,8 +12,8 @@ class Laser:
         self.speed = random.uniform(min_speed, max_speed)
         if self.speed < min_speed:
             self.speed = min_speed
-        if self.speed < LASER_MIN_SPEED:
-            self.speed = LASER_MIN_SPEED
+        if self.speed < LASER_SPEED_START:
+            self.speed = LASER_SPEED_START
 
         if self.side == 0:
             self.cord_x = random.randint(0, WINDOW_X)

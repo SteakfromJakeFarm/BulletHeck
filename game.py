@@ -46,13 +46,31 @@ def game(difficulty, score, debug_state=False):
     timers = {
         'time_start': time.time(),
         'last_spray_toggle': time.time(),
+        'last_bomb_toggle': time.time(),
+        'last_nocollide_toggle': time.time(),
+        'last_ring_toggle': time.time(),
+        'last_tinyman_toggle': time.time(),
+        'last_bigbullets_toggle': time.time(),
+        'last_slowtime_toggle': time.time(),
+        'last_fasttime_toggle': time.time(),
         'last_debug_toggle': time.time(),
         'last_time_change': time.time()
     }
+    debug_powerups = {
+        'ring': False,
+        'bomb': False,
+        'nocollide': False,
+        'tinyman': False,
+        'bigbullets': False,
+        'slowtime': False,
+        'fasttime': False,
+        'spray': False,
+    }
+
     time_change = 0
     powerups = []
     # score = score
-    score_thresh = int(SCORE_THRESHOLD + (difficulty * SCORE_MULTIPLIER * SCORE_THRESHOLD))
+    score_thresh = 10
 
     pygame.event.clear()  # Good for the environment
 
@@ -61,7 +79,7 @@ def game(difficulty, score, debug_state=False):
     player_obj.refresh_debug()
 
     if difficulty % 5 == 0:
-        boss_obj = Boss.Boss(score_thresh)
+        boss_obj = Boss.Boss(difficulty * 5, (difficulty/5.0)/FRAMERATE)
     else:
         boss_obj = False
 
@@ -89,8 +107,8 @@ def game(difficulty, score, debug_state=False):
         game_running, game_state, game_quit = \
             update_events(game_running, game_state, game_quit, lasers)
 
-        debug_state, last_spray_toggle, spray_toggle, time_change = \
-            update_keyboard(debug_state, timers, spray_toggle, player_obj, time_change)
+        debug_state, last_spray_toggle, spray_toggle, time_change, debug_powerups = \
+            update_keyboard(debug_state, timers, spray_toggle, player_obj, time_change, debug_powerups)
 
         update_bombs(player_obj)
 
@@ -101,7 +119,7 @@ def game(difficulty, score, debug_state=False):
 
         spawn_powerups(POWERUP_CHANCE, powerups)  # Chance that a powerup will spawn on any given second
 
-        update_powerups(powerups, player_obj)  # Draw powerups
+        update_powerups(powerups, player_obj, debug_powerups)  # Draw powerups
 
         draw_gui(timers, difficulty, powerup_display, score, score_thresh)  # Show the powerups being used, the level, time, etc.
 

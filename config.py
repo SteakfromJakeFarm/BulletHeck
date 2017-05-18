@@ -1,6 +1,6 @@
 import pygame
 
-VERSION = '0.6'
+VERSION = '0.7'
 FRAMERATE = 60  # Times per second that the loop runs
 WINDOW_X = 700  # Width of the game window in pixels
 WINDOW_Y = 700  # Length of the game window in pixels
@@ -10,13 +10,11 @@ WINDOW_Y = 700  # Length of the game window in pixels
 # Tricky math. Handles spawning of lasers each round. After LASER_DIVIDE number of rounds, there will
 # be LASER_THRESHOLD + LASER_ADD amount of lasers. LASER_ADD is to offset the low amount of lasers in early rounds.
 LASER_START = 20
-LASER_ADD = 3
+LASER_ADD = 2
 
-LASER_SPEED_START = 1  # Starting speed of lasers
-LASER_SPEED_ADD = 0.75  # Amount to add to the max laser speed each round
+LASER_SPEED_START = 1.5  # Starting speed of lasers
+LASER_SPEED_ADD = 0.5  # Amount to add to the max laser speed each round
 
-LASER_MIN_SPEED = 1.5  # The lowest speed that a laser should ever go
-LASER_MULTIPLIER = 2  # Turns the random decimal of 0-1 to a larger, more usable number
 LASER_RESPAWN = True  # Should the lasers respawn once they move off screen?
 
 TIME_LIMIT = 20  # How long do you need to survive before you can pass to the next level?
@@ -56,6 +54,13 @@ DEBUG_PLAYER_SPEED = 3  # Faster move speed for easier debugging
 DEBUG_COLOR_PLAYER = (0, 0, 0)  # Different color to differentiate from normal mode
 DEBUG_COLOR_SCREEN = (100, 100, 100)  # Change the screen's color to signify the mode
 DEBUG_SPRAY_DEBUFFER = 0.3  # This is just for fun. Time between toggling the spray mode.
+DEBUG_BOMB_DEBUFFER = 0.3
+DEBUG_BIGBULLETS_DEBUFFER = 0.3
+DEBUG_NOCOLLIDE_DEBUFFER = 0.3
+DEBUG_SLOWTIME_DEBUFFER = 0.3
+DEBUG_FASTTIME_DEBUFFER = 0.3
+DEBUG_TINYMAN_DEBUFFER = 0.3
+DEBUG_RING_DEBUFFER = 0.3
 
 SCREEN = pygame.display.set_mode((WINDOW_X, WINDOW_Y))  # Create screen on the display
 CLOCK = pygame.time.Clock()  # Create the clock object. Useful for implementing the framerate

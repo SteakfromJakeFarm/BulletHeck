@@ -151,7 +151,22 @@ def spawn_powerups(chance, powerups):
         powerups.append(x)
 
 
-def update_powerups(powerups, player_obj):
+def update_powerups(powerups, player_obj, debug_powerups):
+    for i in debug_powerups:
+        if debug_powerups['ring']:
+            player_obj.give_powerup(1)
+        if debug_powerups['slowtime']:
+            player_obj.give_powerup(2)
+        if debug_powerups['spray']:
+            player_obj.give_powerup(3)
+        if debug_powerups['nocollide']:
+            player_obj.give_powerup(4)
+        if debug_powerups['bigbullets']:
+            player_obj.give_powerup(5)
+        if debug_powerups['bomb']:
+            player_obj.give_powerup(6)
+        if debug_powerups['tinyman']:
+            player_obj.give_powerup(7)
     for i in powerups:
         if i.id == 1:
             # Ring powerup
@@ -214,7 +229,7 @@ def update_powerups(powerups, player_obj):
             pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 5, i.cord_y + 10, 2, 2))
             pygame.draw.rect(SCREEN, (0, 0, 0), pygame.Rect(i.cord_x + 5, i.cord_y + 13, 2, 2))
             if i.hitbox.colliderect(player_obj.hitbox):
-                player_obj.give_powerup(random.randint(1, 7), random.randint(1, 7))
+                player_obj.give_powerup(random.randint(1, 7), random.randint(1, 5))
                 powerups.remove(i)
 
 
@@ -342,7 +357,7 @@ def update_events(game_running, game_quit, game_state, lasers):
     return game_running, game_state, game_quit
 
 
-def update_keyboard(debug_state, timers, spray_toggle, player_obj, time_change):
+def update_keyboard(debug_state, timers, spray_toggle, player_obj, time_change, debug_powerups):
     pressed = pygame.key.get_pressed()  # Make a list of every key that is being pressed down.
 
     if pressed[pygame.K_c] and time.time() >= timers['last_debug_toggle'] + 0.3:
@@ -363,11 +378,29 @@ def update_keyboard(debug_state, timers, spray_toggle, player_obj, time_change):
             print("Error No. 5")
         timers['last_time_change'] = time.time()
 
-    # Another fun easter egg.
-    if pressed[pygame.K_r] and debug_state and (time.time() >= timers['last_spray_toggle'] + DEBUG_SPRAY_DEBUFFER):
-        player_obj.give_powerup(3)
+    # Debug commands <--Start-->
+    if pressed[pygame.K_r] and debug_state and (time.time() >= timers['last_ring_toggle'] + DEBUG_RING_DEBUFFER):
+        debug_powerups['ring'] = not debug_powerups['ring']
+        timers['last_ring_toggle'] = time.time()
+    if pressed[pygame.K_t] and debug_state and (time.time() >= timers['last_slowtime_toggle'] + DEBUG_SLOWTIME_DEBUFFER):
+        debug_powerups['slowtime'] = not debug_powerups['slowtime']
+        timers['last_slowtime_toggle'] = time.time()
+    if pressed[pygame.K_p] and debug_state and (time.time() >= timers['last_spray_toggle'] + DEBUG_SPRAY_DEBUFFER):
+        debug_powerups['spray'] = not debug_powerups['spray']
         timers['last_spray_toggle'] = time.time()
-    return debug_state, timers, spray_toggle, time_change
+    if pressed[pygame.K_n] and debug_state and (time.time() >= timers['last_nocollide_toggle'] + DEBUG_NOCOLLIDE_DEBUFFER):
+        debug_powerups['nocollide'] = not debug_powerups['nocollide']
+        timers['last_nocollide_toggle'] = time.time()
+    if pressed[pygame.K_b] and debug_state and (time.time() >= timers['last_bigbullets_toggle'] + DEBUG_BIGBULLETS_DEBUFFER):
+        debug_powerups['bigbullets'] = not debug_powerups['bigbullets']
+        timers['last_ring_toggle'] = time.time()
+    if pressed[pygame.K_o] and debug_state and (time.time() >= timers['last_bomb_toggle'] + DEBUG_BOMB_DEBUFFER):
+        debug_powerups['bomb'] = not debug_powerups['bomb']
+        timers['last_bomb_toggle'] = time.time()
+    if pressed[pygame.K_l] and debug_state and (time.time() >= timers['last_tinyman_toggle'] + DEBUG_TINYMAN_DEBUFFER):
+        debug_powerups['tinyman'] = not debug_powerups['tinyman']
+        timers['last_tinyman_toggle'] = time.time()
+    return debug_state, timers, spray_toggle, time_change, debug_powerups
 
 
 def update_mouse(player_obj):

@@ -7,9 +7,6 @@ win = False
 score = 0
 checkpoint_score = 0
 while running:
-    #if i%5 == 0:
-    #    checkpoint_score = score
-
     menu_quit, debug = game.main_menu(i, win)
 
     if menu_quit:
