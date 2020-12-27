@@ -21,9 +21,8 @@ def update_keyboard_menu(menu_spot, last_toggle, debug_state, frame):
     pressed = pygame.key.get_pressed()  # Make a list of every key that is being pressed down.
 
     if frame == 1:  # Fixes bug in which pressed from last game can move the cursor to quit on first frame
-        pressed = []
-        for i in range(0, 300):
-            pressed.append(0)
+        for x in pressed:
+            x = False
 
     if pressed[pygame.K_c] and time.time() >= last_toggle + TOGGLE_DEBUFFER:
         # Toggles cheat mode. assuming enough time has passed
